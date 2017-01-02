@@ -1,7 +1,7 @@
 module Parser
     where
 
-import Model
+import Grammar
 import Control.Applicative((<*))
 import Text.Parsec
 import Text.Parsec.String

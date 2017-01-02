@@ -2,7 +2,7 @@ module Main
     where
 
 import Parser
-import Model
+import Grammar
 import CodeGenerator
 import Control.Arrow
 import System.Environment

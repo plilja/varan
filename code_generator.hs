@@ -1,7 +1,7 @@
 module CodeGenerator
     where
 
-import Model
+import Grammar
 import qualified Data.List as L
 
 statementToCode :: Stmt -> String

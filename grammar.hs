@@ -1,4 +1,4 @@
-module Model 
+module Grammar 
     where
 
 data Expr = Var String | Con Bool | Uno Unop Expr | Duo Duop Expr Expr
