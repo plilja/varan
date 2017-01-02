@@ -3,6 +3,7 @@ module Main
 
 import Parser
 import Model
+import CodeGenerator
 import Control.Arrow
 import System.Environment
 import Text.Parsec as P
@@ -10,8 +11,8 @@ import Text.Parsec.String
 
 main = do
     program <- getArgs >>= parseCodeFromFile
-    --let code = generateCode program
-    --putStrLn code
+    let code = statementToCode program
+    putStrLn code
     print program
 
 parseCodeFromFile :: [String] -> IO Stmt
