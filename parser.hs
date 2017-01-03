@@ -11,6 +11,7 @@ import Text.Parsec.Language
 
 languageDef = emptyDef{ commentStart = "/*"
               , commentEnd = "*/"
+              , commentLine = "//"
          --     , identStart = letter
          --     , identLetter = alphaNum
               , opStart = oneOf "~&=:"
@@ -18,7 +19,7 @@ languageDef = emptyDef{ commentStart = "/*"
               , reservedOpNames = ["~", "&&", "==", ":="]
               , reservedNames = ["true", "false", "nop",
                                  "if", "then", "else", "fi",
-                                 "while", "do", "od"]
+                                 "while", "do", "od", "func", "::"]
               }
 
 TokenParser{ parens = m_parens
@@ -26,6 +27,9 @@ TokenParser{ parens = m_parens
            , reservedOp = m_reservedOp
            , reserved = m_reserved
            , semiSep1 = m_semiSep1
+           , comma = m_comma
+           , commaSep = m_commaSep
+           , braces = m_braces
            , whiteSpace = m_whiteSpace } = makeTokenParser languageDef
 
 program :: Parser Stmt
@@ -36,9 +40,11 @@ statements = fmap Seq (m_semiSep1 statement)
 
 statement :: Parser Stmt
 statement = (m_reserved "nop" >> return Nop)
+      <|> funcCall
       <|> assignment 
       <|> ifelse 
       <|> while 
+      <|> func
 
 expression :: Parser Expr
 expression = buildExpressionParser table term <?> "expression"
@@ -81,3 +87,37 @@ while = do
     p <- statement
     m_reserved "od"
     return (While b p)
+
+func :: Parser Stmt
+func = do
+    m_reserved "func"
+    name <- m_identifier
+    ps <- m_parens func_params
+    m_reserved "::"
+    t <- typedecl
+    body <- m_braces statement
+    return (Func name ps t body)
+
+func_params :: Parser [VarDecl]
+func_params = m_commaSep varDecl
+
+funcCall :: Parser Stmt
+funcCall = do
+    name <- m_identifier
+    params <- m_parens (m_commaSep expression)
+    return (FuncCall name params)
+
+varDecl :: Parser VarDecl
+varDecl = do
+    n <- m_identifier
+    m_reserved "::"
+    t <- typedecl
+    return (Vd n t)
+
+typedecl :: Parser String
+typedecl = m_identifier
+    
+
+
+
+

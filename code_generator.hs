@@ -18,6 +18,14 @@ statementToCode (While expr stmt) = "while (" ++ expressionToCode expr ++ ") {\n
                                     statementToCode stmt ++
                                     "\n}\n"
 statementToCode (Seq stmts) = (L.intercalate ";\n" $ map statementToCode stmts) ++ ";"
+statementToCode (Func name vars ret body) = ret 
+                                    ++ " " ++ name 
+                                    ++ "(" ++ (varsToCode vars) ++ ") {\n" 
+                                    ++ statementToCode body 
+                                    ++ "\n}\n" 
+statementToCode (FuncCall name params) = name ++ "(" 
+                                        ++ (L.intercalate "," (map expressionToCode params)) 
+                                        ++ ")"
 
 
 expressionToCode :: Expr -> String
@@ -31,6 +39,11 @@ expressionToCode (Duo duop expr1 expr2) = "(" ++
                                          "(" ++ 
                                          expressionToCode expr2 ++
                                          ")"
+
+varsToCode vs = L.intercalate ", " $ map varToCode vs
+
+varToCode :: VarDecl -> String
+varToCode (Vd name type_) = type_ ++ " " ++ name
 
 unopToCode :: Unop -> String
 unopToCode Not = "!"
