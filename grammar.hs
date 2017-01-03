@@ -21,6 +21,7 @@ data Stmt = Nop
             | Seq [Stmt] 
             | Func Name [VarDecl] String Stmt
             | FuncCall Name [Expr]
+            | Type Name [VarDecl]
     deriving Show
 
 data VarDecl = Vd Name String deriving Show

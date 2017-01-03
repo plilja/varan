@@ -19,32 +19,43 @@ languageDef = emptyDef{ commentStart = "/*"
               , reservedOpNames = ["~", "&&", "==", ":="]
               , reservedNames = ["true", "false", "nop",
                                  "if", "then", "else", "fi",
-                                 "while", "do", "od", "func", "::"]
+                                 "while", "do", "od", "func", 
+                                 "::", "type"]
               }
 
 TokenParser{ parens = m_parens
            , identifier = m_identifier
            , reservedOp = m_reservedOp
            , reserved = m_reserved
-           , semiSep1 = m_semiSep1
+           -- , semiSep1 = m_semiSep1
            , comma = m_comma
            , commaSep = m_commaSep
            , braces = m_braces
+           , semi = m_semi
            , whiteSpace = m_whiteSpace } = makeTokenParser languageDef
 
 program :: Parser Stmt
-program = m_whiteSpace >> statements <* eof
-
-statements :: Parser Stmt
-statements = fmap Seq (m_semiSep1 statement)
+program = m_whiteSpace >> statement <* eof
 
 statement :: Parser Stmt
-statement = (m_reserved "nop" >> return Nop)
-      <|> funcCall
-      <|> assignment 
-      <|> ifelse 
-      <|> while 
+statement = fmap Seq (semsep singleStatement)
+
+semsep :: Parser a -> Parser [a]
+semsep p = do
+    a <- p
+    m_semi
+    rem <- semsep p <|> return []
+    return (a:rem)
+
+singleStatement :: Parser Stmt
+singleStatement = (m_reserved "nop" >> return Nop)
+      <|> try funcCall
+      <|> try stVarDecl
+      <|> try assignment 
+      <|> try ifelse 
+      <|> try while 
       <|> func
+      <|> typedecl
 
 expression :: Parser Expr
 expression = buildExpressionParser table term <?> "expression"
@@ -94,7 +105,7 @@ func = do
     name <- m_identifier
     ps <- m_parens func_params
     m_reserved "::"
-    t <- typedecl
+    t <- m_identifier
     body <- m_braces statement
     return (Func name ps t body)
 
@@ -107,17 +118,24 @@ funcCall = do
     params <- m_parens (m_commaSep expression)
     return (FuncCall name params)
 
+stVarDecl :: Parser Stmt
+stVarDecl = do
+    vd <- varDecl
+    return (StVd vd)
+
 varDecl :: Parser VarDecl
 varDecl = do
     n <- m_identifier
     m_reserved "::"
-    t <- typedecl
+    t <- m_identifier
     return (Vd n t)
 
-typedecl :: Parser String
-typedecl = m_identifier
-    
-
-
+typedecl :: Parser Stmt
+typedecl = do
+    m_reserved "type"
+    name <- m_identifier
+    members <- m_braces (semsep varDecl)
+    -- m_semi
+    return (Type name members)
 
 

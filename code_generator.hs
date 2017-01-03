@@ -26,7 +26,10 @@ statementToCode (Func name vars ret body) = ret
 statementToCode (FuncCall name params) = name ++ "(" 
                                         ++ (L.intercalate "," (map expressionToCode params)) 
                                         ++ ")"
-
+statementToCode (Type name members) = "struct " ++ name ++ "{\n" 
+                                        ++ (L.intercalate ";\n" (map varToCode members)) 
+                                        ++ "\n}"
+statementToCode (StVd var) = varToCode var
 
 expressionToCode :: Expr -> String
 expressionToCode (Var v) = v 
