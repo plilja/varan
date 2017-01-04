@@ -31,6 +31,7 @@ TokenParser{ parens = m_parens
            , comma = m_comma
            , commaSep = m_commaSep
            , braces = m_braces
+           , brackets = m_brackets
            , semi = m_semi
            , whiteSpace = m_whiteSpace } = makeTokenParser languageDef
 
@@ -124,11 +125,21 @@ stVarDecl = do
     return (StVd vd)
 
 varDecl :: Parser VarDecl
-varDecl = do
-    n <- m_identifier
-    m_reserved "::"
-    t <- m_identifier
-    return (Vd n t)
+varDecl = try arrayDecl <|> singleDecl
+    where
+        arrayDecl :: Parser VarDecl
+        arrayDecl = do
+            n <- m_identifier
+            m_reserved "::"
+            t <- m_identifier
+            m_brackets m_whiteSpace
+            return (Array n t)
+        singleDecl :: Parser VarDecl
+        singleDecl = do
+            n <- m_identifier
+            m_reserved "::"
+            t <- m_identifier
+            return (Single n t)
 
 typedecl :: Parser Stmt
 typedecl = do

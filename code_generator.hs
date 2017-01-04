@@ -46,7 +46,8 @@ expressionToCode (Duo duop expr1 expr2) = "(" ++
 varsToCode vs = L.intercalate ", " $ map varToCode vs
 
 varToCode :: VarDecl -> String
-varToCode (Vd name type_) = type_ ++ " " ++ name
+varToCode (Single name type_) = type_ ++ " " ++ name
+varToCode (Array name type_) = type_ ++ " " ++ name ++ "[256]" -- TODO custom length
 
 unopToCode :: Unop -> String
 unopToCode Not = "!"

@@ -4,7 +4,7 @@ import Grammar
 
 stdLib :: [Stmt]
 stdLib = [(Type "String" [])
-        , (Func "print" [(Vd "arg" "String")] "void" Nop)
-        , (Func "intToString" [(Vd "arg" "Int")] "String" Nop)
+        , (Func "print" [(Single "arg" "String")] "void" Nop)
+        , (Func "intToString" [(Single "arg" "Int")] "String" Nop)
         ]
 

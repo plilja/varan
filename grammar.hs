@@ -24,7 +24,8 @@ data Stmt = Nop
             | Type Name [VarDecl]
     deriving Show
 
-data VarDecl = Vd Name String deriving Show
+data VarDecl = Single Name String | Array Name String
+    deriving Show
 
 --data Type = Int_ | String_ | Double_ deriving Show
 -- TODO user defined types
