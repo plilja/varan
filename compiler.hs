@@ -3,6 +3,7 @@ module Main
 
 import Parser
 import Grammar
+import StdLib
 import CodeGenerator
 import Control.Arrow
 import System.Environment
@@ -11,8 +12,12 @@ import Text.Parsec.String
 
 main = do
     program <- getArgs >>= parseCodeFromFile
-    let code = statementToCode program
+    let std = stdLib
+        code = statementToCode program
     putStrLn code
+    putStrLn ""
+    putStrLn "---------"
+    putStrLn ""
     print program
 
 parseCodeFromFile :: [String] -> IO Stmt
