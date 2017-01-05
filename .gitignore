@@ -45,3 +45,5 @@ Contents/
 #haskell
 *.hi
 
+ignored
+compiler
