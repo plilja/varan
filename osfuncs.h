@@ -4,10 +4,14 @@
 
 struct String {
     char str[256];
-}; 
+};
 
-void pprint(struct String *s) {
+/*void pprint(struct String *s) {
     printf("%s\n", s->str);
+}*/
+
+void pprint(char *s) {
+    printf("%s\n", s);
 }
 
 struct String intToString(int a) {

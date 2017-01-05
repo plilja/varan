@@ -1,6 +1,6 @@
-type String {
-    str :: char[];
-};
+/*type String {
+    str :: Char[];
+};*/
 
 func print(s :: String) :: Void {
     pprint(s.str);
@@ -8,5 +8,5 @@ func print(s :: String) :: Void {
 
 func println(s :: String) :: Void {
     pprint(s.str);
-    pprint("\n");
+    print("\n");
 };

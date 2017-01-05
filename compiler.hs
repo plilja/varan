@@ -11,11 +11,13 @@ import Text.Parsec as P
 import Text.Parsec.String
 
 main = do
+    putStrLn "#include \"osfuncs.h\""
+    putStrLn ""
     stdlib <- parseCodeFromFile ["stdlib.vr"]
     putStrLn (statementToCode stdlib)
     program <- getArgs >>= parseCodeFromFile
     let osFuncs = stdLib
-        code = statementToCode program
+        code = programToCode program
     putStrLn code
     putStrLn ""
     putStrLn "//---------"
