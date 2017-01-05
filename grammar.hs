@@ -7,6 +7,7 @@ data Expr = Var Name
             | Con Literal
             | Uno Unop Expr 
             | Duo Duop Expr Expr
+            | MemberAccess Name Name 
     deriving Show
 
 data Literal = BoolLiteral Bool | StringLiteral String | IntLiteral Int | DoubleLiteral Double

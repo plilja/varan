@@ -1,5 +1,4 @@
-module Parser
-    where
+module Parser where
 
 import Grammar
 import Control.Applicative((<*))
@@ -28,11 +27,15 @@ TokenParser{ parens = m_parens
            , reservedOp = m_reservedOp
            , reserved = m_reserved
            -- , semiSep1 = m_semiSep1
+           , integer = m_integer
+           , stringLiteral = m_stringLiteral
+           , float = m_float
            , comma = m_comma
            , commaSep = m_commaSep
            , braces = m_braces
            , brackets = m_brackets
            , semi = m_semi
+           , dot = m_dot
            , whiteSpace = m_whiteSpace } = makeTokenParser languageDef
 
 program :: Parser Stmt
@@ -69,9 +72,25 @@ table = [ [Prefix (m_reservedOp "~" >> return (Uno Not))]
 
 term :: Parser Expr
 term = m_parens expression
-       <|> fmap Var m_identifier
-       <|> (m_reserved "true" >> return (Con (BoolLiteral True)))
-       <|> (m_reserved "false" >> return (Con (BoolLiteral False)))
+       <|> try memberAccess 
+       <|> try (fmap Var m_identifier)
+       <|> fmap Con literal
+
+
+
+literal :: Parser Literal
+literal = (m_reserved "true" >> return (BoolLiteral True))
+       <|> (m_reserved "false" >> return (BoolLiteral False))
+       <|> try (fmap (\v -> IntLiteral (fromInteger v)) m_integer)
+       <|> try (fmap (\v -> DoubleLiteral v) m_float)
+       <|> fmap StringLiteral m_stringLiteral
+
+memberAccess :: Parser Expr
+memberAccess = do
+    v <- m_identifier
+    m_dot
+    m <- m_identifier
+    return (MemberAccess v m)
 
 assignment :: Parser Stmt
 assignment = do 

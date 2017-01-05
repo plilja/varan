@@ -16,9 +16,9 @@ main = do
         code = statementToCode program
     putStrLn code
     putStrLn ""
-    putStrLn "---------"
+    putStrLn "//---------"
     putStrLn ""
-    print program
+    putStrLn $ "// " ++ (show program)
 
 parseCodeFromFile :: [String] -> IO Stmt
 parseCodeFromFile fp = do 

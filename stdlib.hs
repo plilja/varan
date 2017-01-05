@@ -4,7 +4,8 @@ import Grammar
 
 stdLib :: [Stmt]
 stdLib = [(Type "String" [])
-        , (Func "print" [(Single "arg" "String")] "void" Nop)
+        , (Func "pprint" [(Single "arg" "String")] "void" Nop)
         , (Func "intToString" [(Single "arg" "Int")] "String" Nop)
+        , (Func "makeString" [(Array "s" "Char")] "void" Nop)
         ]
 

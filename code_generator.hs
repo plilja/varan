@@ -3,6 +3,7 @@ module CodeGenerator
 
 import Grammar
 import qualified Data.List as L
+import qualified Data.Char as C
 
 statementToCode :: Stmt -> String
 statementToCode Nop = ""
@@ -33,7 +34,8 @@ statementToCode (StVd var) = varToCode var
 
 expressionToCode :: Expr -> String
 expressionToCode (Var v) = v 
-expressionToCode (Con b) = show b 
+expressionToCode (MemberAccess v m) = v ++ "->" ++ m 
+expressionToCode (Con l) = literalToCode l 
 expressionToCode (Uno unop expr) = unopToCode unop ++ "(" ++ expressionToCode expr ++ ")"
 expressionToCode (Duo duop expr1 expr2) = "(" ++ 
                                          expressionToCode expr1 ++
@@ -42,6 +44,13 @@ expressionToCode (Duo duop expr1 expr2) = "(" ++
                                          "(" ++ 
                                          expressionToCode expr2 ++
                                          ")"
+
+
+literalToCode :: Literal -> String
+literalToCode (BoolLiteral b) = map C.toLower $ show b 
+literalToCode (IntLiteral i) = show i
+literalToCode (DoubleLiteral d) = show d
+literalToCode (StringLiteral s) = "makeString(" ++ show s ++ ")" -- TODO memory leak
 
 varsToCode vs = L.intercalate ", " $ map varToCode vs
 
