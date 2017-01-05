@@ -12,8 +12,8 @@ import Text.Parsec.Language
 languageDef = emptyDef{ commentStart = "/*"
               , commentEnd = "*/"
               , commentLine = "//"
-         --     , identStart = letter
-         --     , identLetter = alphaNum
+              , identStart = letter
+              , identLetter = alphaNum
               , opStart = oneOf "~&=:"
               , opLetter = oneOf "~&=:"
               , reservedOpNames = ["~", "&&", "==", ":="]
@@ -70,8 +70,8 @@ table = [ [Prefix (m_reservedOp "~" >> return (Uno Not))]
 term :: Parser Expr
 term = m_parens expression
        <|> fmap Var m_identifier
-       <|> (m_reserved "true" >> return (Con True))
-       <|> (m_reserved "false" >> return (Con False))
+       <|> (m_reserved "true" >> return (Con (BoolLiteral True)))
+       <|> (m_reserved "false" >> return (Con (BoolLiteral False)))
 
 assignment :: Parser Stmt
 assignment = do 

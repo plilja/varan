@@ -4,9 +4,12 @@ module Grammar
 type Name = String
 
 data Expr = Var Name 
-            | Con Bool
+            | Con Literal
             | Uno Unop Expr 
             | Duo Duop Expr Expr
+    deriving Show
+
+data Literal = BoolLiteral Bool | StringLiteral String | IntLiteral Int | DoubleLiteral Double
     deriving Show
 
 data Unop = Not deriving Show
