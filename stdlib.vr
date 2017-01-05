@@ -1,0 +1,12 @@
+type String {
+    str :: char[];
+};
+
+func print(s :: String) :: Void {
+    pprint(s.str);
+};
+
+func println(s :: String) :: Void {
+    pprint(s.str);
+    pprint("\n");
+};

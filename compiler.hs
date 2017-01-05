@@ -3,7 +3,7 @@ module Main
 
 import Parser
 import Grammar
-import StdLib
+import OsFuncs
 import CodeGenerator
 import Control.Arrow
 import System.Environment
@@ -11,8 +11,10 @@ import Text.Parsec as P
 import Text.Parsec.String
 
 main = do
+    stdlib <- parseCodeFromFile ["stdlib.vr"]
+    putStrLn (statementToCode stdlib)
     program <- getArgs >>= parseCodeFromFile
-    let std = stdLib
+    let osFuncs = stdLib
         code = statementToCode program
     putStrLn code
     putStrLn ""

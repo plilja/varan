@@ -1,4 +1,4 @@
-module StdLib where
+module OsFuncs where
 
 import Grammar
 
