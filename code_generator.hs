@@ -1,5 +1,4 @@
-module CodeGenerator
-    where
+module CodeGenerator where
 
 import Grammar
 import Util
@@ -8,24 +7,28 @@ import qualified Data.Char as C
 
 
 programToCode :: Stmt -> String
-programToCode (Seq stmts) = divideIntoMain stmts
-programToCode stmt = divideIntoMain [stmt]
+programToCode (Seq stmts) = fst $ divideIntoMain stmts
+programToCode stmt = fst $ divideIntoMain [stmt]
 
-divideIntoMain :: [Stmt] -> String
-divideIntoMain ss = let (topLevel, inMain) = f ss
-                     in topLevel ++ "\n\n" ++ "int main() {\n" ++ (indent inMain) ++ "}\n"
-    where
-        f :: [Stmt] -> (String, String)
-        f [] = ("", "")
-        f ((Func name vars ret body):ss) = addLeft (statementToCode (Func name vars ret body)) (f ss)
-        f ((Type name vars):ss) = addLeft (statementToCode (Type name vars)) (f ss)
-        f (s:ss) = addRight (statementToCode s) (f ss)
+mainToCode :: Stmt -> Maybe String
+mainToCode (Seq stmts) = mainOrEmpty $ snd $ divideIntoMain stmts
+mainToCode stmt = mainOrEmpty $ snd $ divideIntoMain [stmt]
 
-        addLeft :: String -> (String, String) -> (String, String)
-        addLeft s (a, b) = (s ++ a, b)
+divideIntoMain :: [Stmt] -> (String, String)
+divideIntoMain [] = ("", "")
+divideIntoMain ((Func name vars ret body):ss) = addLeft (statementToCode (Func name vars ret body)) (divideIntoMain ss)
+divideIntoMain ((Type name vars):ss) = addLeft (statementToCode (Type name vars)) (divideIntoMain ss)
+divideIntoMain (s:ss) = addRight (statementToCode s) (divideIntoMain ss)
 
-        addRight :: String -> (String, String) -> (String, String)
-        addRight s (a, b) = (a, s ++ b)
+addLeft :: String -> (String, String) -> (String, String)
+addLeft s (a, b) = (s ++ a, b)
+
+addRight :: String -> (String, String) -> (String, String)
+addRight s (a, b) = (a, s ++ b)
+
+mainOrEmpty :: String -> Maybe String
+mainOrEmpty [] = Nothing 
+mainOrEmpty xs = Just $ "int main() {\n" ++ (indent xs) ++ "}\n"
 
 statementToCode :: Stmt -> String
 statementToCode Nop = ""

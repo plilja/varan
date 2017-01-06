@@ -1,0 +1,11 @@
+# !/bin/sh
+
+if [ -d "target" ]; then
+    rm -r target
+fi
+
+mkdir target
+
+./compiler $@
+cp osfuncs.h target
+gcc target/*.c -o a.out
