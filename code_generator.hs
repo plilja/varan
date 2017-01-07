@@ -49,9 +49,7 @@ statementToCode (Func name vars ret body) = (typeToCode ret)
                                     ++ "(" ++ (varsToCode vars) ++ ") {\n" 
                                     ++ indent (statementToCode body)
                                     ++ "}\n\n" 
-statementToCode (FuncCall name params) = name ++ "(" 
-                                        ++ (L.intercalate "," (map expressionToCode params)) 
-                                        ++ ");\n"
+statementToCode (StFuncCall funcCall) = expressionToCode funcCall ++ ";\n"
 statementToCode (Type name members) = "struct " ++ name ++ "{\n" 
                                         ++ indent (L.intercalate ";\n" (map varToCode members)) 
                                         ++ ";\n};\n\n"
@@ -69,7 +67,9 @@ expressionToCode (Duo duop expr1 expr2) = "(" ++
                                          "(" ++ 
                                          expressionToCode expr2 ++
                                          ")"
-
+expressionToCode (FuncCall name params) = name ++ "(" 
+                                        ++ (L.intercalate "," (map expressionToCode params)) 
+                                        ++ ")"
 
 literalToCode :: Literal -> String
 literalToCode (BoolLiteral b) = map C.toLower $ show b 
@@ -97,4 +97,8 @@ duopToCode :: Duop -> String
 duopToCode And = "&&"
 duopToCode Or = "||"
 duopToCode Iff = "=="
+duopToCode Mul = "*"
+duopToCode Div = "/"
+duopToCode Add = "+"
+duopToCode Sub = "-"
 

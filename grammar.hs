@@ -8,6 +8,7 @@ data Expr = Var Name
             | Uno Unop Expr 
             | Duo Duop Expr Expr
             | MemberAccess Name Name 
+            | FuncCall Name [Expr]
     deriving Show
 
 data Literal = BoolLiteral Bool | StringLiteral String | IntLiteral Int | DoubleLiteral Double
@@ -15,7 +16,7 @@ data Literal = BoolLiteral Bool | StringLiteral String | IntLiteral Int | Double
 
 data Unop = Not deriving Show
 
-data Duop = And | Or | Iff deriving Show
+data Duop = Add | Sub | Div | Mul | And | Or | Iff deriving Show
 
 data Stmt = Nop  
             | StVd VarDecl
@@ -24,12 +25,9 @@ data Stmt = Nop
             | While Expr Stmt
             | Seq [Stmt] 
             | Func Name [VarDecl] String Stmt
-            | FuncCall Name [Expr]
+            | StFuncCall Expr
             | Type Name [VarDecl]
     deriving Show
 
 data VarDecl = Single Name String | Array Name String
     deriving Show
-
---data Type = Int_ | String_ | Double_ deriving Show
--- TODO user defined types

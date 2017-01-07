@@ -26,7 +26,6 @@ TokenParser{ parens = m_parens
            , identifier = m_identifier
            , reservedOp = m_reservedOp
            , reserved = m_reserved
-           -- , semiSep1 = m_semiSep1
            , integer = m_integer
            , stringLiteral = m_stringLiteral
            , float = m_float
@@ -53,7 +52,8 @@ semsep p = do
 
 singleStatement :: Parser Stmt
 singleStatement = (m_reserved "nop" >> return Nop)
-      <|> try funcCall
+      <|> try stFuncCall
+      <|> try stVarDeclAndAssignment
       <|> try stVarDecl
       <|> try assignment 
       <|> try ifelse 
@@ -65,6 +65,10 @@ expression :: Parser Expr
 expression = buildExpressionParser table term <?> "expression"
 
 table = [ [Prefix (m_reservedOp "~" >> return (Uno Not))]
+        , [Infix (m_reservedOp "*" >> return (Duo Mul)) AssocLeft]
+        , [Infix (m_reservedOp "/" >> return (Duo Div)) AssocLeft]
+        , [Infix (m_reservedOp "+" >> return (Duo Add)) AssocLeft]
+        , [Infix (m_reservedOp "-" >> return (Duo Sub)) AssocLeft]
         , [Infix (m_reservedOp "&&" >> return (Duo And)) AssocLeft]
         , [Infix (m_reservedOp "||" >> return (Duo Or)) AssocLeft]
         , [Infix (m_reservedOp "==" >> return (Duo Iff)) AssocLeft]
@@ -73,10 +77,9 @@ table = [ [Prefix (m_reservedOp "~" >> return (Uno Not))]
 term :: Parser Expr
 term = m_parens expression
        <|> try memberAccess 
+       <|> try funcCall
        <|> try (fmap Var m_identifier)
        <|> fmap Con literal
-
-
 
 literal :: Parser Literal
 literal = (m_reserved "true" >> return (BoolLiteral True))
@@ -132,7 +135,12 @@ func = do
 func_params :: Parser [VarDecl]
 func_params = m_commaSep varDecl
 
-funcCall :: Parser Stmt
+stFuncCall :: Parser Stmt
+stFuncCall = do
+    fc <- funcCall
+    return (StFuncCall fc)
+
+funcCall :: Parser Expr
 funcCall = do
     name <- m_identifier
     params <- m_parens (m_commaSep expression)
@@ -142,6 +150,17 @@ stVarDecl :: Parser Stmt
 stVarDecl = do
     vd <- varDecl
     return (StVd vd)
+
+stVarDeclAndAssignment :: Parser Stmt
+stVarDeclAndAssignment = do
+    vd <- varDecl
+    m_reserved ":="
+    e <- expression
+    return (Seq [StVd vd, (varName vd) := e])
+
+varName :: VarDecl -> String
+varName (Single n _) = n
+varName (Array n _) = n
 
 varDecl :: Parser VarDecl
 varDecl = try arrayDecl <|> singleDecl

@@ -10,3 +10,7 @@ func println(s :: String) :: Void {
     pprint(s.str);
     print("\n");
 };
+
+func printInt(i :: Int) :: Void {
+    pprintInt(i);
+};

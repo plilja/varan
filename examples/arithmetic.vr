@@ -1,0 +1,16 @@
+a :: Int := 3;
+b :: Int := 2;
+c :: Int := a + b;
+printInt(c);
+
+d :: Int := a + b + c;
+printInt(d);
+
+e :: Int := d / c;
+printInt(e);
+
+f :: Int := 2 * 5;
+printInt(f);
+
+g :: Int := 2 - 4;
+printInt(g);

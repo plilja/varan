@@ -1,3 +1,6 @@
+#ifndef _OSFUNCS
+#define _OSFUNCS
+
 #include "stdio.h"
 #include "string.h"
 #include "stdlib.h"
@@ -14,6 +17,10 @@ void pprint(char *s) {
     printf("%s\n", s);
 }
 
+void pprintInt(int i) {
+    printf("%d\n", i);
+}
+
 struct String intToString(int a) {
     struct String s;
     sprintf(s.str, "%d", a);
@@ -25,3 +32,5 @@ struct String* makeString(char *s) {
     strcpy(res->str, s);
     return res;
 }
+
+#endif
