@@ -14,3 +14,6 @@ printInt(f);
 
 g :: Int := 2 - 4;
 printInt(g);
+
+h :: Int := 10 % 3;
+printInt(h);

@@ -101,4 +101,5 @@ duopToCode Mul = "*"
 duopToCode Div = "/"
 duopToCode Add = "+"
 duopToCode Sub = "-"
+duopToCode Mod = "%"
 

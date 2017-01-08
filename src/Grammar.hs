@@ -16,7 +16,7 @@ data Literal = BoolLiteral Bool | StringLiteral String | IntLiteral Int | Double
 
 data Unop = Not deriving Show
 
-data Duop = Add | Sub | Div | Mul | And | Or | Iff deriving Show
+data Duop = Add | Sub | Div | Mul | Mod | And | Or | Iff deriving Show
 
 data Stmt = Nop  
             | StVd VarDecl
