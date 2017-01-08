@@ -6,6 +6,6 @@ fi
 
 mkdir target
 
-./compiler $@
-cp osfuncs.h target
+./bin/compiler $@
+cp lib/osfuncs.h target
 gcc target/*.c -o a.out
