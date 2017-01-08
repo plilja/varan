@@ -17,8 +17,8 @@ languageDef = emptyDef{ commentStart = "/*"
               , opLetter = oneOf "~&=:"
               , reservedOpNames = ["~", "&&", "==", ":="]
               , reservedNames = ["true", "false", "nop",
-                                 "if", "then", "else", "fi",
-                                 "while", "do", "od", "func", 
+                                 "if", "then", "else", 
+                                 "while", "func", 
                                  "::", "type"]
               }
 
@@ -57,6 +57,8 @@ singleStatement = (m_reserved "nop" >> return Nop)
       <|> try stVarDecl
       <|> try assignment 
       <|> try ifelse 
+      <|> try if_
+      <|> try for 
       <|> try while 
       <|> func
       <|> typedecl
@@ -70,6 +72,10 @@ table = [ [Prefix (m_reservedOp "~" >> return (Uno Not))]
         , [Infix (m_reservedOp "+" >> return (Duo Add)) AssocLeft]
         , [Infix (m_reservedOp "-" >> return (Duo Sub)) AssocLeft]
         , [Infix (m_reservedOp "%" >> return (Duo Mod)) AssocLeft]
+        , [Infix (m_reservedOp "<" >> return (Duo Lt)) AssocLeft]
+        , [Infix (m_reservedOp "<=" >> return (Duo LtEq)) AssocLeft]
+        , [Infix (m_reservedOp ">" >> return (Duo Gt)) AssocLeft]
+        , [Infix (m_reservedOp ">=" >> return (Duo GtEq)) AssocLeft]
         , [Infix (m_reservedOp "&&" >> return (Duo And)) AssocLeft]
         , [Infix (m_reservedOp "||" >> return (Duo Or)) AssocLeft]
         , [Infix (m_reservedOp "==" >> return (Duo Iff)) AssocLeft]
@@ -106,13 +112,31 @@ assignment = do
 ifelse :: Parser Stmt
 ifelse = do 
     m_reserved "if"
-    b <- expression
-    m_reserved "then"
-    p <- statement
+    b <- m_parens expression
+    consequent <- m_braces statement
     m_reserved "else"
-    q <- statement
-    m_reserved "fi"
-    return (If b p q)
+    alternative <- m_braces statement
+    return (IfElse b consequent alternative)
+
+if_ :: Parser Stmt
+if_ = do 
+    m_reserved "if"
+    b <- m_parens expression
+    consequent <- m_braces statement
+    return (If b consequent)
+
+for :: Parser Stmt
+for = do
+    m_reserved "for"
+    (initial, cond, inc) <- m_parens $ do
+        initial <- singleStatement
+        m_semi
+        cond <- expression
+        m_semi
+        inc <- singleStatement
+        return (initial, cond, inc)
+    body <- m_braces statement
+    return (For initial cond inc body)
 
 while :: Parser Stmt
 while = do 

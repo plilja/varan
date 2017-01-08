@@ -31,9 +31,13 @@ mainOrEmpty [] = Nothing
 mainOrEmpty xs = Just $ "int main() {\n" ++ (indent xs) ++ "}\n"
 
 statementToCode :: Stmt -> String
-statementToCode Nop = ""
-statementToCode (variable := expr) = variable ++ " = (" ++ expressionToCode expr ++ ");\n"
-statementToCode (If expr consequent alternative) = "if (" ++ 
+statementToCode (Seq stmts) = concat $ map statementToCode stmts
+statementToCode (If expr consequent) = "if (" ++ 
+                                            expressionToCode expr ++
+                                            ") {\n" ++
+                                            indent (statementToCode consequent) ++
+                                            "\n}\n"
+statementToCode (IfElse expr consequent alternative) = "if (" ++ 
                                                     expressionToCode expr ++
                                                     ") {\n" ++
                                                     indent (statementToCode consequent) ++
@@ -43,17 +47,34 @@ statementToCode (If expr consequent alternative) = "if (" ++
 statementToCode (While expr stmt) = "while (" ++ expressionToCode expr ++ ") {\n" ++
                                     indent (statementToCode stmt) ++
                                     "\n}\n"
-statementToCode (Seq stmts) = concat $ map statementToCode stmts
+statementToCode (For initial cond increment body) = 
+                                    statementToCode initial 
+                                    ++ "for (" 
+                                    ++ "; "
+                                    ++ expressionToCode cond 
+                                    ++ "; "
+                                    ++ simpleStatementToCode increment 
+                                    ++ ") {\n"
+                                    ++ indent (statementToCode body)
+                                    ++ "\n}\n"
 statementToCode (Func name vars ret body) = (typeToCode ret)
                                     ++ " " ++ name 
                                     ++ "(" ++ (varsToCode vars) ++ ") {\n" 
                                     ++ indent (statementToCode body)
                                     ++ "}\n\n" 
-statementToCode (StFuncCall funcCall) = expressionToCode funcCall ++ ";\n"
 statementToCode (Type name members) = "struct " ++ name ++ "{\n" 
                                         ++ indent (L.intercalate ";\n" (map varToCode members)) 
                                         ++ ";\n};\n\n"
-statementToCode (StVd var) = (varToCode var) ++ ";\n"
+statementToCode stmt = simpleStatementToCode stmt ++ ";\n" -- Default
+
+-- | For statements that can be part of for instance a for expression
+-- TODO consider cleaner solution, maybe make part of grammar
+simpleStatementToCode :: Stmt -> String
+simpleStatementToCode Nop = ""
+simpleStatementToCode (variable := expr) = variable ++ " = (" ++ expressionToCode expr ++ ")"
+simpleStatementToCode (StFuncCall funcCall) = expressionToCode funcCall
+simpleStatementToCode (StVd var) = (varToCode var)
+
 
 expressionToCode :: Expr -> String
 expressionToCode (Var v) = v 
@@ -102,4 +123,8 @@ duopToCode Div = "/"
 duopToCode Add = "+"
 duopToCode Sub = "-"
 duopToCode Mod = "%"
+duopToCode Lt = "<"
+duopToCode LtEq = "<="
+duopToCode Gt = ">"
+duopToCode GtEq = ">="
 

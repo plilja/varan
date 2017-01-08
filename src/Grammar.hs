@@ -16,12 +16,14 @@ data Literal = BoolLiteral Bool | StringLiteral String | IntLiteral Int | Double
 
 data Unop = Not deriving Show
 
-data Duop = Add | Sub | Div | Mul | Mod | And | Or | Iff deriving Show
+data Duop = Add | Sub | Div | Mul | Mod | And | Or | Iff | Lt | Gt | LtEq | GtEq deriving Show
 
 data Stmt = Nop  
             | StVd VarDecl
             | Name := Expr 
-            | If Expr Stmt Stmt 
+            | If Expr Stmt  
+            | IfElse Expr Stmt Stmt 
+            | For Stmt Expr Stmt Stmt
             | While Expr Stmt
             | Seq [Stmt] 
             | Func Name [VarDecl] String Stmt
