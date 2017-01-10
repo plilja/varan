@@ -115,7 +115,7 @@ ifelse = do
     b <- m_parens expression
     consequent <- m_braces statement
     m_reserved "else"
-    alternative <- m_braces statement
+    alternative <- try ifelse <|> (m_braces statement)
     return (IfElse b consequent alternative)
 
 if_ :: Parser Stmt

@@ -1,5 +1,4 @@
 - Remove semicolon at end of for loop and if/ifelse-statements
-- Add elif-statements
 - Add "continue" statement
 - Crosscheck syntax (for instance: references, if(exp) should only accept bool as exp, function params)
 - Unit tests
