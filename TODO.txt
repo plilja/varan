@@ -1,0 +1,14 @@
+- Remove semicolon at end of for loop and if/ifelse-statements
+- Add elif-statements
+- Add "continue" statement
+- Crosscheck syntax (for instance: references, if(exp) should only accept bool as exp, function params)
+- Unit tests
+- "Pass by value" vs "pass by reference" for function calls
+- Assignment user defined types
+- Line annotation in C code
+- Include files
+- Automatic type deduction
+- Write README (including short info about lang syntax)
+- Look over array implementation
+- Collections API:s
+- Consider user defined member functions (or stick with first method function params)
