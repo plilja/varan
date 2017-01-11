@@ -38,10 +38,20 @@ TokenParser{ parens = m_parens
            , whiteSpace = m_whiteSpace } = makeTokenParser languageDef
 
 program :: Parser Stmt
-program = m_whiteSpace >> statement <* eof
+program = m_whiteSpace >> statements <* eof
+
+statements :: Parser Stmt
+statements = fmap Seq $ many statement
 
 statement :: Parser Stmt
-statement = fmap Seq (semsep singleStatement)
+statement = 
+    try (inlineStatement <* m_semi)
+    <|> try ifelse
+    <|> try if_
+    <|> try for
+    <|> try while
+    <|> try func
+    <|> typedecl
 
 semsep :: Parser a -> Parser [a]
 semsep p = do
@@ -50,18 +60,12 @@ semsep p = do
     rem <- semsep p <|> return []
     return (a:rem)
 
-singleStatement :: Parser Stmt
-singleStatement = (m_reserved "nop" >> return Nop)
+inlineStatement :: Parser Stmt
+inlineStatement = (m_reserved "nop" >> return Nop)
       <|> try stFuncCall
       <|> try stVarDeclAndAssignment
       <|> try stVarDecl
-      <|> try assignment 
-      <|> try ifelse 
-      <|> try if_
-      <|> try for 
-      <|> try while 
-      <|> func
-      <|> typedecl
+      <|> assignment 
 
 expression :: Parser Expr
 expression = buildExpressionParser table term <?> "expression"
@@ -113,29 +117,29 @@ ifelse :: Parser Stmt
 ifelse = do 
     m_reserved "if"
     b <- m_parens expression
-    consequent <- m_braces statement
+    consequent <- m_braces statements
     m_reserved "else"
-    alternative <- try ifelse <|> (m_braces statement)
+    alternative <- try ifelse <|> (m_braces statements)
     return (IfElse b consequent alternative)
 
 if_ :: Parser Stmt
 if_ = do 
     m_reserved "if"
     b <- m_parens expression
-    consequent <- m_braces statement
+    consequent <- m_braces statements
     return (If b consequent)
 
 for :: Parser Stmt
 for = do
     m_reserved "for"
     (initial, cond, inc) <- m_parens $ do
-        initial <- singleStatement
+        initial <- inlineStatement
         m_semi
         cond <- expression
         m_semi
-        inc <- singleStatement
+        inc <- inlineStatement
         return (initial, cond, inc)
-    body <- m_braces statement
+    body <- m_braces statements
     return (For initial cond inc body)
 
 while :: Parser Stmt
@@ -143,7 +147,7 @@ while = do
     m_reserved "while"
     b <- expression
     m_reserved "do"
-    p <- statement
+    p <- statements
     m_reserved "od"
     return (While b p)
 
@@ -154,16 +158,14 @@ func = do
     ps <- m_parens func_params
     m_reserved "::"
     t <- m_identifier
-    body <- m_braces statement
+    body <- m_braces statements
     return (Func name ps t body)
 
 func_params :: Parser [VarDecl]
 func_params = m_commaSep varDecl
 
 stFuncCall :: Parser Stmt
-stFuncCall = do
-    fc <- funcCall
-    return (StFuncCall fc)
+stFuncCall = fmap StFuncCall funcCall
 
 funcCall :: Parser Expr
 funcCall = do
@@ -209,7 +211,6 @@ typedecl = do
     m_reserved "type"
     name <- m_identifier
     members <- m_braces (semsep varDecl)
-    -- m_semi
     return (Type name members)
 
 

@@ -7,5 +7,5 @@ for (i :: Int := 1; i <= 100; i := i + 1) {
         print("BUZZ");
     } else {
         printInt(i);
-    };
-};
+    }
+}

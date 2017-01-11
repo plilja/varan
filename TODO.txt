@@ -1,4 +1,3 @@
-- Remove semicolon at end of for loop and if/ifelse-statements
 - Add "continue" statement
 - Crosscheck syntax (for instance: references, if(exp) should only accept bool as exp, function params)
 - Unit tests
@@ -11,3 +10,4 @@
 - Look over array implementation
 - Collections API:s
 - Consider user defined member functions (or stick with first method function params)
+- Fix While loop
