@@ -89,7 +89,7 @@ term :: Parser Expr
 term = m_parens expression
        <|> try memberAccess 
        <|> try funcCall
-       <|> try (fmap Var m_identifier)
+       <|> try variable 
        <|> fmap Con literal
 
 literal :: Parser Literal
@@ -98,6 +98,9 @@ literal = (m_reserved "true" >> return (BoolLiteral True))
        <|> try (fmap (\v -> IntLiteral (fromInteger v)) m_integer)
        <|> try (fmap (\v -> DoubleLiteral v) m_float)
        <|> fmap StringLiteral m_stringLiteral
+
+variable :: Parser Expr
+variable = fmap Var m_identifier
 
 memberAccess :: Parser Expr
 memberAccess = do
@@ -108,7 +111,7 @@ memberAccess = do
 
 assignment :: Parser Stmt
 assignment = do 
-    v <- m_identifier
+    v <- (try memberAccess <|> variable)
     m_reservedOp ":="
     e <- expression
     return (v := e)
@@ -183,7 +186,7 @@ stVarDeclAndAssignment = do
     vd <- varDecl
     m_reserved ":="
     e <- expression
-    return (Seq [StVd vd, (varName vd) := e])
+    return (Seq [StVd vd, Var (varName vd) := e])
 
 varName :: VarDecl -> String
 varName (Single n _) = n

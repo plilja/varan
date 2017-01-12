@@ -71,9 +71,14 @@ statementToCode stmt = simpleStatementToCode stmt ++ ";\n" -- Default
 -- TODO consider cleaner solution, maybe make part of grammar
 simpleStatementToCode :: Stmt -> String
 simpleStatementToCode Nop = ""
-simpleStatementToCode (variable := expr) = variable ++ " = (" ++ expressionToCode expr ++ ")"
+simpleStatementToCode (variable := expr) = (expressionToCode variable) ++ " = (" ++ expressionToCode expr ++ ")"
 simpleStatementToCode (StFuncCall funcCall) = expressionToCode funcCall
+simpleStatementToCode (StVd (Single name type_)) 
+    | isPrimitive type_ = varToCode (Single name type_) 
+    | otherwise = typeToCode type_ ++ " _" ++ name ++ ";\n"
+                  ++ varToCode (Single name type_) ++ " = &_" ++ name
 simpleStatementToCode (StVd var) = (varToCode var)
+
 
 
 expressionToCode :: Expr -> String
@@ -101,7 +106,8 @@ literalToCode (StringLiteral s) = "makeString(" ++ show s ++ ")" -- TODO memory 
 varsToCode vs = L.intercalate ", " $ map varToCode vs
 
 varToCode :: VarDecl -> String
-varToCode (Single name type_) = (typeToCode type_) ++ " " ++ (if (isPrimitive type_) then name else "*" ++ name)
+varToCode (Single name type_) | isPrimitive type_ = typeToCode type_ ++ " " ++ name
+                              | otherwise = typeToCode type_ ++ " *" ++ name
 varToCode (Array name type_) = (typeToCode type_) ++ " " ++ name ++ "[256]" -- TODO custom length
 
 typeToCode :: String -> String

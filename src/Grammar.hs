@@ -20,7 +20,7 @@ data Duop = Add | Sub | Div | Mul | Mod | And | Or | Iff | Lt | Gt | LtEq | GtEq
 
 data Stmt = Nop  
             | StVd VarDecl
-            | Name := Expr 
+            | Expr := Expr 
             | If Expr Stmt  
             | IfElse Expr Stmt Stmt 
             | For Stmt Expr Stmt Stmt

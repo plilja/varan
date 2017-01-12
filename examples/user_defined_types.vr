@@ -1,0 +1,10 @@
+type T {
+   a :: Int; 
+   b :: Int; 
+}
+
+t :: T;
+t.a := 1;
+t.b := 2;
+printInt(t.a);
+printInt(t.b);

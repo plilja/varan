@@ -25,21 +25,22 @@ compileSingleFile fileName = do
     let outFileName = getOutFile fileName
         code = programToCode program
         maybeMain = mainToCode program
-    writeCodeFile outFileName code
+    writeCodeFile outFileName code []
     case maybeMain of
-        Just m -> writeCodeFile "main.c" m
+        Just m -> writeCodeFile "main.c" m [outFileName]
         _ -> return ()
     putStrLn ""
     putStrLn "//---------"
     putStrLn ""
     putStrLn $ "// " ++ (show program)
 
-writeCodeFile :: String -> String -> IO ()
-writeCodeFile outFileName contents = do
+writeCodeFile :: String -> String -> [String] -> IO ()
+writeCodeFile outFileName contents includes = do
     oFile <- openFile ("target/" ++ outFileName) WriteMode
     hPutStrLn oFile $ "#ifndef " ++ (replace outFileName '.' '_')
     hPutStrLn oFile $ "#define " ++ (replace outFileName '.' '_')
     hPutStrLn oFile "#include \"osfuncs.h\""
+    hPutStrLn oFile $ unlines $ map (\s -> "#include \"" ++ s ++ "\"") includes
     if outFileName /= "varan_std.h" then
         hPutStrLn oFile "#include \"varan_std.h\""
     else
