@@ -32,12 +32,7 @@ mainOrEmpty xs = Just $ "int main() {\n" ++ (indent xs) ++ "}\n"
 
 statementToCode :: Stmt -> String
 statementToCode (Seq stmts) = concat $ map statementToCode stmts
-statementToCode (If expr consequent) = "if (" ++ 
-                                            expressionToCode expr ++
-                                            ") {\n" ++
-                                            indent (statementToCode consequent) ++
-                                            "\n}\n"
-statementToCode (IfElse expr consequent alternative) = "if (" ++ 
+statementToCode (If expr consequent alternative) = "if (" ++ 
                                                     expressionToCode expr ++
                                                     ") {\n" ++
                                                     indent (statementToCode consequent) ++

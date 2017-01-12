@@ -21,8 +21,7 @@ data Duop = Add | Sub | Div | Mul | Mod | And | Or | Iff | Lt | Gt | LtEq | GtEq
 data Stmt = Nop  
             | StVd VarDecl
             | Expr := Expr 
-            | If Expr Stmt  
-            | IfElse Expr Stmt Stmt 
+            | If Expr Stmt Stmt 
             | For Stmt Expr Stmt Stmt
             | While Expr Stmt
             | Seq [Stmt] 

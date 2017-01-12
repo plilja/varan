@@ -123,14 +123,14 @@ ifelse = do
     consequent <- m_braces statements
     m_reserved "else"
     alternative <- try ifelse <|> (m_braces statements)
-    return (IfElse b consequent alternative)
+    return (If b consequent alternative)
 
 if_ :: Parser Stmt
 if_ = do 
     m_reserved "if"
     b <- m_parens expression
     consequent <- m_braces statements
-    return (If b consequent)
+    return (If b consequent Nop)
 
 for :: Parser Stmt
 for = do
