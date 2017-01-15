@@ -2,7 +2,6 @@
 - Crosscheck syntax (for instance: references, if(exp) should only accept bool as exp, function params)
 - Unit tests
 - "Pass by value" vs "pass by reference" for function calls
-- Assignment user defined types
 - Line annotation in C code
 - Include files
 - Automatic type deduction
