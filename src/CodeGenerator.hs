@@ -16,8 +16,8 @@ mainToCode stmt = mainOrEmpty $ snd $ divideIntoMain [stmt]
 
 divideIntoMain :: [Stmt] -> (String, String)
 divideIntoMain [] = ("", "")
-divideIntoMain ((Func name vars ret body):ss) = addLeft (statementToCode (Func name vars ret body)) (divideIntoMain ss)
-divideIntoMain ((Type name vars):ss) = addLeft (statementToCode (Type name vars)) (divideIntoMain ss)
+divideIntoMain (func@(Func name vars ret body):ss) = addLeft (statementToCode func) (divideIntoMain ss)
+divideIntoMain (typeDecl@(Type name vars):ss) = addLeft (statementToCode typeDecl) (divideIntoMain ss)
 divideIntoMain (s:ss) = addRight (statementToCode s) (divideIntoMain ss)
 
 addLeft :: String -> (String, String) -> (String, String)
@@ -68,10 +68,10 @@ simpleStatementToCode :: Stmt -> String
 simpleStatementToCode Nop = ""
 simpleStatementToCode (variable := expr) = (expressionToCode variable) ++ " = (" ++ expressionToCode expr ++ ")"
 simpleStatementToCode (StFuncCall funcCall) = expressionToCode funcCall
-simpleStatementToCode (StVd (Single name type_)) 
-    | isPrimitive type_ = varToCode (Single name type_) 
+simpleStatementToCode (StVd singleVar@(Single name type_)) 
+    | isPrimitive type_ = varToCode singleVar 
     | otherwise = typeToCode type_ ++ " _" ++ name ++ ";\n"
-                  ++ varToCode (Single name type_) ++ " = &_" ++ name
+                  ++ varToCode singleVar ++ " = &_" ++ name
 simpleStatementToCode (StVd var) = (varToCode var)
 
 
