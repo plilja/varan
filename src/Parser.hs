@@ -148,11 +148,9 @@ for = do
 while :: Parser Stmt
 while = do 
     m_reserved "while"
-    b <- expression
-    m_reserved "do"
-    p <- statements
-    m_reserved "od"
-    return (While b p)
+    cond <- m_parens expression
+    body <- m_braces statements
+    return (For Nop cond Nop body)
 
 func :: Parser Stmt
 func = do

@@ -1,0 +1,13 @@
+i :: Int := 1;
+while (i <= 100) {
+    if (i % 15 == 0) {
+        print("FIZZBUZZ");
+    } else if (i % 3 == 0) {
+        print("FIZZ");
+    } else if (i % 5 == 0) {
+        print("BUZZ");
+    } else {
+        printInt(i);
+    }
+    i := i + 1;
+}

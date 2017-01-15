@@ -39,9 +39,6 @@ statementToCode (If expr consequent alternative) = "if (" ++
                                                     "\n} else {" ++
                                                     indent (statementToCode alternative) ++
                                                     "\n}\n"
-statementToCode (While expr stmt) = "while (" ++ expressionToCode expr ++ ") {\n" ++
-                                    indent (statementToCode stmt) ++
-                                    "\n}\n"
 statementToCode (For initial cond increment body) = 
                                     statementToCode initial 
                                     ++ "for (" 

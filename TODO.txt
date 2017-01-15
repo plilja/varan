@@ -9,4 +9,3 @@
 - Look over array implementation
 - Collections API:s
 - Consider user defined member functions (or stick with first method function params)
-- Fix While loop

@@ -23,7 +23,6 @@ data Stmt = Nop
             | Expr := Expr 
             | If Expr Stmt Stmt 
             | For Stmt Expr Stmt Stmt
-            | While Expr Stmt
             | Seq [Stmt] 
             | Func Name [VarDecl] String Stmt
             | StFuncCall Expr
