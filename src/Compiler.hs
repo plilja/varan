@@ -29,10 +29,6 @@ compileSingleFile fileName = do
     case maybeMain of
         Just m -> writeCodeFile "main.c" m [outFileName]
         _ -> return ()
-    putStrLn ""
-    putStrLn "//---------"
-    putStrLn ""
-    putStrLn $ "// " ++ (show program)
 
 writeCodeFile :: String -> String -> [String] -> IO ()
 writeCodeFile outFileName contents includes = do
@@ -40,6 +36,7 @@ writeCodeFile outFileName contents includes = do
     hPutStrLn oFile $ "#ifndef " ++ (replace outFileName '.' '_')
     hPutStrLn oFile $ "#define " ++ (replace outFileName '.' '_')
     hPutStrLn oFile "#include \"osfuncs.h\""
+    hPutStrLn oFile "#include \"memory.h\""
     hPutStrLn oFile $ unlines $ map (\s -> "#include \"" ++ s ++ "\"") includes
     if outFileName /= "varan_std.h" then
         hPutStrLn oFile "#include \"varan_std.h\""

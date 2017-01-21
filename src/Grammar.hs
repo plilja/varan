@@ -9,6 +9,7 @@ data Expr = Var Name
             | Duo Duop Expr Expr
             | MemberAccess Name Name 
             | FuncCall Name [Expr]
+            | New Name
     deriving Show
 
 data Literal = BoolLiteral Bool | StringLiteral String | IntLiteral Int | DoubleLiteral Double

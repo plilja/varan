@@ -19,7 +19,7 @@ languageDef = emptyDef{ commentStart = "/*"
               , reservedNames = ["true", "false", "nop",
                                  "if", "then", "else", 
                                  "while", "func", 
-                                 "::", "type"]
+                                 "::", "type", "new"]
               }
 
 TokenParser{ parens = m_parens
@@ -90,6 +90,7 @@ term = m_parens expression
        <|> try memberAccess 
        <|> try funcCall
        <|> try variable 
+       <|> try new 
        <|> fmap Con literal
 
 literal :: Parser Literal
@@ -108,6 +109,12 @@ memberAccess = do
     m_dot
     m <- m_identifier
     return (MemberAccess v m)
+
+new :: Parser Expr
+new = do
+    m_reserved "new"
+    t <- m_identifier
+    return (New t)
 
 assignment :: Parser Stmt
 assignment = do 

@@ -9,5 +9,5 @@ fi
 mkdir target
 
 ./bin/compiler $@
-cp lib/osfuncs.h target
+cp lib/*.h target
 gcc target/*.c -o a.out

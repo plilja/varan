@@ -28,7 +28,13 @@ addRight s (a, b) = (a, s ++ b)
 
 mainOrEmpty :: String -> Maybe String
 mainOrEmpty [] = Nothing 
-mainOrEmpty xs = Just $ "int main() {\n" ++ (indent xs) ++ "}\n"
+mainOrEmpty xs = Just $ "int main() {\n"
+                    ++ indent "void* _stack = get_stack();\n"
+                    ++ indent "init();\n" 
+                    ++ (indent xs) ++ "\n"
+                    ++ indent "stack_reset(_stack);\n"
+                    ++ indent "tear_down();\n"
+                    ++ "}\n"
 
 statementToCode :: Stmt -> String
 statementToCode (Seq stmts) = concat $ map statementToCode stmts
@@ -52,7 +58,9 @@ statementToCode (For initial cond increment body) =
 statementToCode (Func name vars ret body) = (typeToCode ret)
                                     ++ " " ++ name 
                                     ++ "(" ++ (varsToCode vars) ++ ") {\n" 
+                                    ++ "void* _stack = get_stack();\n"
                                     ++ indent (statementToCode body)
+                                    ++ "stack_reset(_stack);"
                                     ++ "}\n\n" 
 statementToCode (Type name members) = "struct " ++ name ++ "{\n" 
                                         ++ indent (L.intercalate ";\n" (map varToCode members)) 
@@ -65,17 +73,14 @@ simpleStatementToCode :: Stmt -> String
 simpleStatementToCode Nop = ""
 simpleStatementToCode (variable := expr) = (expressionToCode variable) ++ " = (" ++ expressionToCode expr ++ ")"
 simpleStatementToCode (StFuncCall funcCall) = expressionToCode funcCall
-simpleStatementToCode (StVd singleVar@(Single name type_)) 
-    | isPrimitive type_ = varToCode singleVar 
-    | otherwise = typeToCode type_ ++ " _" ++ name ++ ";\n"
-                  ++ varToCode singleVar ++ " = &_" ++ name
+simpleStatementToCode (StVd singleVar@(Single name type_)) = varToCode singleVar 
 simpleStatementToCode (StVd var) = (varToCode var)
 
 
 
 expressionToCode :: Expr -> String
-expressionToCode (Var v) = v 
-expressionToCode (MemberAccess v m) = v ++ "->" ++ m 
+expressionToCode (Var v) = v
+expressionToCode (MemberAccess v m) = "(*" ++ v ++ ")" ++ "->" ++ m 
 expressionToCode (Con l) = literalToCode l 
 expressionToCode (Uno unop expr) = unopToCode unop ++ "(" ++ expressionToCode expr ++ ")"
 expressionToCode (Duo duop expr1 expr2) = "(" ++ 
@@ -88,6 +93,7 @@ expressionToCode (Duo duop expr1 expr2) = "(" ++
 expressionToCode (FuncCall name params) = name ++ "(" 
                                         ++ (L.intercalate "," (map expressionToCode params)) 
                                         ++ ")"
+expressionToCode (New t) = "(" ++ typeToCode t ++ ")" ++ "stack_push(alloc(sizeof(struct " ++ t ++ ")))"
 
 literalToCode :: Literal -> String
 literalToCode (BoolLiteral b) = map C.toLower $ show b 
@@ -98,16 +104,16 @@ literalToCode (StringLiteral s) = "makeString(" ++ show s ++ ")" -- TODO memory 
 varsToCode vs = L.intercalate ", " $ map varToCode vs
 
 varToCode :: VarDecl -> String
-varToCode (Single name type_) | isPrimitive type_ = typeToCode type_ ++ " " ++ name
-                              | otherwise = typeToCode type_ ++ " *" ++ name
+varToCode (Single name type_) = (typeToCode type_) ++ " " ++ name 
 varToCode (Array name type_) = (typeToCode type_) ++ " " ++ name ++ "[256]" -- TODO custom length
 
 typeToCode :: String -> String
+typeToCode "Void" = "void"
 typeToCode t | isPrimitive t = map C.toLower t
-             | otherwise = "struct " ++ t
+             | otherwise = "struct " ++ t ++ "**"
 
 isPrimitive :: String -> Bool
-isPrimitive t = t `elem` ["Int", "Void", "Double", "Bool", "Char"]
+isPrimitive t = t `elem` ["Int", "Double", "Char", "Bool"] 
 
 unopToCode :: Unop -> String
 unopToCode Not = "!"

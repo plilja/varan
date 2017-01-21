@@ -4,6 +4,7 @@
 #include "stdio.h"
 #include "string.h"
 #include "stdlib.h"
+#include "memory.h"
 
 struct String {
     char str[256];
@@ -27,9 +28,9 @@ struct String intToString(int a) {
     return s;
 }
 
-struct String* makeString(char *s) {
-    struct String *res = (struct String*) malloc(sizeof(struct String));
-    strcpy(res->str, s);
+struct String** makeString(char *s) {
+    struct String **res = (struct String**) stack_push(alloc(sizeof(struct String)));
+    strcpy((*res)->str, s);
     return res;
 }
 
