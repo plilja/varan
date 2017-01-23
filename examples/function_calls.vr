@@ -1,0 +1,25 @@
+type T {
+    one :: Int;
+    two :: Int;
+}
+
+func foo() :: Int {
+    return 4711;
+}
+
+func bar() :: Int {
+    return foo() - 1;
+}
+
+func baz() :: T {
+    t :: T := new T;
+    t.one := 1;
+    t.two := 2;
+    return t;
+}
+
+printInt(foo());
+printInt(bar());
+t :: T := baz();
+printInt(t.one);
+printInt(t.two);

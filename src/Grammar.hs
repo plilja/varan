@@ -28,6 +28,7 @@ data Stmt = Nop
             | Func Name [VarDecl] String Stmt
             | StFuncCall Expr
             | Type Name [VarDecl]
+            | Return Expr
     deriving Show
 
 data VarDecl = Single Name String | Array Name String

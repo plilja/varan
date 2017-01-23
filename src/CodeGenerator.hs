@@ -34,6 +34,7 @@ mainOrEmpty xs = Just $ "int main() {\n"
                     ++ (indent xs) ++ "\n"
                     ++ indent "stack_reset(_stack);\n"
                     ++ indent "tear_down();\n"
+                    ++ indent "return 0;\n"
                     ++ "}\n"
 
 statementToCode :: Stmt -> String
@@ -58,13 +59,18 @@ statementToCode (For initial cond increment body) =
 statementToCode (Func name vars ret body) = (typeToCode ret)
                                     ++ " " ++ name 
                                     ++ "(" ++ (varsToCode vars) ++ ") {\n" 
-                                    ++ "void* _stack = get_stack();\n"
-                                    ++ indent (statementToCode body)
-                                    ++ "stack_reset(_stack);"
+                                    ++ indent (
+                                        "void* _stack = get_stack();\n"
+                                        ++ (if (ret /= "Void") then (typeToCode ret) ++ " _result;\n" else "")
+                                        ++ statementToCode body
+                                        ++ "stack_reset(_stack);\n"
+                                        ++ (if (ret /= "Void") then "return _result;\n" else "")
+                                    )
                                     ++ "}\n\n" 
 statementToCode (Type name members) = "struct " ++ name ++ "{\n" 
                                         ++ indent (L.intercalate ";\n" (map varToCode members)) 
                                         ++ ";\n};\n\n"
+statementToCode (Return expr) = "_result = " ++ expressionToCode expr ++ ";\n"
 statementToCode stmt = simpleStatementToCode stmt ++ ";\n" -- Default
 
 -- | For statements that can be part of for instance a for expression
