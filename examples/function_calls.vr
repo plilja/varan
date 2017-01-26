@@ -3,23 +3,45 @@ type T {
     two :: Int;
 }
 
-func foo() :: Int {
+func f1() :: Int {
     return 4711;
 }
 
-func bar() :: Int {
-    return foo() - 1;
+func f2() :: Int {
+    return f1() - 1;
 }
 
-func baz() :: T {
+func f3() :: T {
     t :: T := new T;
     t.one := 1;
     t.two := 2;
     return t;
 }
 
-printInt(foo());
-printInt(bar());
-t :: T := baz();
-printInt(t.one);
-printInt(t.two);
+func f4(param :: Int) :: Int {
+    return 2 * param;
+}
+
+func f5(param :: T) :: Int {
+    return param.one + param.two;
+}
+
+printInt(f1());
+printInt(f2());
+
+// Function that returns a user defined type 
+t1 :: T := f3();
+printInt(t1.one);
+printInt(t1.two);
+
+// With parameter
+printInt(f4(2));
+
+// With user defined type as parameter
+t2 :: T := new T;
+t2.one := 5;
+t2.two := 6;
+printInt(f5(t2));
+
+// With anonymous parameter
+printInt(f5(f3()));

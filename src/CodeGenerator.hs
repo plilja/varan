@@ -1,10 +1,21 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module CodeGenerator where
 
 import Grammar
 import Util
+import Control.Lens
 import qualified Data.List as L
 import qualified Data.Char as C
+import Text.Printf
 
+data Env = Env {
+    _functions :: [Stmt],
+    _variables :: [VarDecl],
+    _code :: String
+}
+
+makeLenses ''Env
 
 programToCode :: Stmt -> String
 programToCode (Seq stmts) = fst $ divideIntoMain stmts
@@ -16,9 +27,12 @@ mainToCode stmt = mainOrEmpty $ snd $ divideIntoMain [stmt]
 
 divideIntoMain :: [Stmt] -> (String, String)
 divideIntoMain [] = ("", "")
-divideIntoMain (func@(Func name vars ret body):ss) = addLeft (statementToCode func) (divideIntoMain ss)
-divideIntoMain (typeDecl@(Type name vars):ss) = addLeft (statementToCode typeDecl) (divideIntoMain ss)
-divideIntoMain (s:ss) = addRight (statementToCode s) (divideIntoMain ss)
+divideIntoMain (func@(Func name vars ret body):ss) = addLeft ((statementToCode emptyEnv func)^.code) (divideIntoMain ss)
+divideIntoMain (typeDecl@(Type name vars):ss) = addLeft ((statementToCode emptyEnv typeDecl)^.code) (divideIntoMain ss)
+divideIntoMain (s:ss) = addRight ((statementToCode emptyEnv s)^.code) (divideIntoMain ss)
+
+emptyEnv :: Env
+emptyEnv = Env [] [] ""
 
 addLeft :: String -> (String, String) -> (String, String)
 addLeft s (a, b) = (s ++ a, b)
@@ -37,69 +51,63 @@ mainOrEmpty xs = Just $ "int main() {\n"
                     ++ indent "return 0;\n"
                     ++ "}\n"
 
-statementToCode :: Stmt -> String
-statementToCode (Seq stmts) = concat $ map statementToCode stmts
-statementToCode (If expr consequent alternative) = "if (" ++ 
-                                                    expressionToCode expr ++
-                                                    ") {\n" ++
-                                                    indent (statementToCode consequent) ++
-                                                    "\n} else {" ++
-                                                    indent (statementToCode alternative) ++
-                                                    "\n}\n"
-statementToCode (For initial cond increment body) = 
-                                    statementToCode initial 
-                                    ++ "for (" 
-                                    ++ "; "
-                                    ++ expressionToCode cond 
-                                    ++ "; "
-                                    ++ simpleStatementToCode increment 
-                                    ++ ") {\n"
-                                    ++ indent (statementToCode body)
-                                    ++ "\n}\n"
-statementToCode (Func name vars ret body) = (typeToCode ret)
-                                    ++ " " ++ name 
-                                    ++ "(" ++ (varsToCode vars) ++ ") {\n" 
-                                    ++ indent (
-                                        "void* _stack = get_stack();\n"
-                                        ++ (if (ret /= "Void") then (typeToCode ret) ++ " _result;\n" else "")
-                                        ++ statementToCode body
-                                        ++ "stack_reset(_stack);\n"
-                                        ++ (if (ret /= "Void") then "return _result;\n" else "")
-                                    )
-                                    ++ "}\n\n" 
-statementToCode (Type name members) = "struct " ++ name ++ "{\n" 
-                                        ++ indent (L.intercalate ";\n" (map varToCode members)) 
-                                        ++ ";\n};\n\n"
-statementToCode (Return expr) = "_result = " ++ expressionToCode expr ++ ";\n"
-statementToCode stmt = simpleStatementToCode stmt ++ ";\n" -- Default
+statementToCode :: Env -> Stmt -> Env
+statementToCode env (Seq stmts) = foldl statementToCode env stmts 
+statementToCode env (If expr consequent alternative) = let consequentBranch = statementToCode env consequent
+                                                           alternativeBranch = statementToCode env alternative
+                                                           ifCode = printf "if(%s) {\n%s\n} else {\n%s\n}\n" 
+                                                                        (expressionToCode env expr)
+                                                                        (indent (consequentBranch^.code))
+                                                                        (indent (alternativeBranch^.code))
+                                                        in over code (++ ifCode) env
+statementToCode env (For initial cond increment body) = let initializationEnv = statementToCode (set code "" env) initial
+                                                            incrementEnv = simpleStatementToCode (set code "" initializationEnv) increment
+                                                            bodyEnv = statementToCode (set code "" incrementEnv) body
+                                                            forCode = printf "%s\nfor (; %s; %s) {\n%s\n}\n" 
+                                                                            (initializationEnv^.code) 
+                                                                            (expressionToCode initializationEnv cond) 
+                                                                            (incrementEnv^.code) 
+                                                                            (indent (bodyEnv^.code))
+                                                         in over code (++ forCode) env
+statementToCode env f@(Func name vars ret body) = let funcCode = printf ("%s %s(%s) {\n"
+                                                                ++ indent ("void* _stack = get_stack();\n"
+                                                                    ++ (if (ret /= "Void") then (typeToCode ret) ++ " _result;\n" else "")
+                                                                    ++ "%s\n"
+                                                                    ++ "stack_reset(_stack);\n"
+                                                                    ++ (if (ret /= "Void") then "return _result;\n" else ""))
+                                                                ++ "}\n\n") (typeToCode ret) name (varsToCode env vars) ((statementToCode env body)^.code)
+                                                 in over functions (++ [f]) $ over code (++ funcCode) env
+statementToCode env (Type name members) = let typeCode = printf "struct %s {\n%s;\n};\n\n" name (indent (L.intercalate ";\n" (map (varToCode env) members)))
+                                           in over code (++ typeCode) env
+statementToCode env (Return expr) = over code (++ "_result = " ++ expressionToCode env expr ++ ";\n") env
+statementToCode env stmt = over code (++ ";\n") (simpleStatementToCode env stmt) -- Default
 
 -- | For statements that can be part of for instance a for expression
 -- TODO consider cleaner solution, maybe make part of grammar
-simpleStatementToCode :: Stmt -> String
-simpleStatementToCode Nop = ""
-simpleStatementToCode (variable := expr) = (expressionToCode variable) ++ " = (" ++ expressionToCode expr ++ ")"
-simpleStatementToCode (StFuncCall funcCall) = expressionToCode funcCall
-simpleStatementToCode (StVd singleVar@(Single name type_)) = varToCode singleVar 
-simpleStatementToCode (StVd var) = (varToCode var)
+simpleStatementToCode :: Env -> Stmt -> Env
+simpleStatementToCode env Nop = env
+simpleStatementToCode env (variable := expr) = over code (++ (expressionToCode env variable) ++ " = (" ++ expressionToCode env expr ++ ")") env
+simpleStatementToCode env (StFuncCall funcCall) = over code (++ expressionToCode env funcCall) env
+simpleStatementToCode env (StVd var) = over code (++ varToCode env var) env 
 
 
-
-expressionToCode :: Expr -> String
-expressionToCode (Var v) = v
-expressionToCode (MemberAccess v m) = "(*" ++ v ++ ")" ++ "->" ++ m 
-expressionToCode (Con l) = literalToCode l 
-expressionToCode (Uno unop expr) = unopToCode unop ++ "(" ++ expressionToCode expr ++ ")"
-expressionToCode (Duo duop expr1 expr2) = "(" ++ 
-                                         expressionToCode expr1 ++
+expressionToCode :: Env -> Expr -> String
+expressionToCode env (Var v) = v
+expressionToCode env (MemberAccess v m) = "(*" ++ v ++ ")" ++ "->" ++ m 
+expressionToCode env (Con l) = literalToCode l 
+expressionToCode env (Uno unop expr) = unopToCode unop ++ "(" ++ expressionToCode env expr ++ ")"
+expressionToCode env (Duo duop expr1 expr2) = "(" ++ 
+                                         expressionToCode env expr1 ++
                                          ")" ++ 
                                          duopToCode duop ++
                                          "(" ++ 
-                                         expressionToCode expr2 ++
+                                         expressionToCode env expr2 ++
                                          ")"
-expressionToCode (FuncCall name params) = name ++ "(" 
-                                        ++ (L.intercalate "," (map expressionToCode params)) 
+-- TODO need to take address of result if result is not primitive
+expressionToCode env (FuncCall name params) = name ++ "(" 
+                                        ++ (L.intercalate "," (map (expressionToCode env) params)) 
                                         ++ ")"
-expressionToCode (New t) = "(" ++ typeToCode t ++ ")" ++ "stack_push(alloc(sizeof(struct " ++ t ++ ")))"
+expressionToCode env (New t) = "(" ++ typeToCode t ++ ")" ++ "stack_push(alloc(sizeof(struct " ++ t ++ ")))"
 
 literalToCode :: Literal -> String
 literalToCode (BoolLiteral b) = map C.toLower $ show b 
@@ -107,11 +115,12 @@ literalToCode (IntLiteral i) = show i
 literalToCode (DoubleLiteral d) = show d
 literalToCode (StringLiteral s) = "makeString(" ++ show s ++ ")" -- TODO memory leak
 
-varsToCode vs = L.intercalate ", " $ map varToCode vs
+varsToCode env vs = L.intercalate ", " $ map (varToCode env) vs
 
-varToCode :: VarDecl -> String
-varToCode (Single name type_) = (typeToCode type_) ++ " " ++ name 
-varToCode (Array name type_) = (typeToCode type_) ++ " " ++ name ++ "[256]" -- TODO custom length
+varToCode :: Env -> VarDecl -> String
+varToCode env (Single name type_) | isPrimitive type_ = (typeToCode type_) ++ " " ++ name 
+                                  | otherwise = (typeToCode type_) ++ " " ++ name 
+varToCode env (Array name type_) = (typeToCode type_) ++ "* " ++ name ++ "[256]" -- TODO custom length
 
 typeToCode :: String -> String
 typeToCode "Void" = "void"
