@@ -3,9 +3,9 @@ module OsFuncs where
 import Grammar
 
 stdLib :: [Stmt]
-stdLib = [(Type "String" [])
-        , (Func "pprint" [(Single "arg" "String")] "void" Nop)
-        , (Func "intToString" [(Single "arg" "Int")] "String" Nop)
-        , (Func "makeString" [(Array "s" "Char")] "void" Nop)
+stdLib = [(Func "pprint" [(Single "arg" "String")] "Void" Nop)
+        , (Func "printInt" [(Single "arg" "Int")] "Void" Nop)
+        , (Func "pprintInt" [(Single "arg" "Int")] "Void" Nop) 
+        , (Func "print" [(Single "arg" "String")] "Void" Nop)
         ]
 

@@ -23,8 +23,7 @@ compileSingleFile :: String -> IO ()
 compileSingleFile fileName = do
     program <- parseCodeFromFile fileName
     let outFileName = getOutFile fileName
-        code = programToCode program
-        maybeMain = mainToCode program
+        (code, maybeMain) = programToCode program
     writeCodeFile outFileName code []
     case maybeMain of
         Just m -> writeCodeFile "main.c" m [outFileName]
