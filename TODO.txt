@@ -10,3 +10,4 @@
 - Separate header files from impl files
 - Ability to specify which output file compiler should write to
 - Compile files in appropriate order so compile env can propagate between files
+- Printf, string.format os something similar
