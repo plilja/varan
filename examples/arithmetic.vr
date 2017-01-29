@@ -1,19 +1,21 @@
 a :: Int := 3;
 b :: Int := 2;
 c :: Int := a + b;
-printInt(c);
+assert(c == 5);
 
 d :: Int := a + b + c;
-printInt(d);
+assert(d == 10);
 
 e :: Int := d / c;
-printInt(e);
+assert(e == 2);
 
 f :: Int := 2 * 5;
-printInt(f);
+assert(f == 10);
 
 g :: Int := 2 - 4;
-printInt(g);
+assert(g == -2);
 
 h :: Int := 10 % 3;
-printInt(h);
+assert(h == 1);
+
+print("Success!");
