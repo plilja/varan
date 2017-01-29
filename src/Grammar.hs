@@ -29,6 +29,7 @@ data Stmt = Nop
             | StFuncCall Expr
             | Type Name [VarDecl]
             | Return Expr
+            | Continue
     deriving Show
 
 data VarDecl = Single Name String | Array Name String

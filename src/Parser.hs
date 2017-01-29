@@ -18,8 +18,9 @@ languageDef = emptyDef{ commentStart = "/*"
               , reservedOpNames = ["~", "&&", "==", ":="]
               , reservedNames = ["true", "false", "nop",
                                  "if", "then", "else", 
-                                 "while", "func", 
-                                 "::", "type", "new", "return"]
+                                 "while", "func", "::", 
+                                 "type", "new", "return",
+                                 "continue"]
               }
 
 TokenParser{ parens = m_parens
@@ -51,6 +52,7 @@ statement =
     <|> try for
     <|> try while
     <|> try func
+    <|> try continue
     <|> try return_
     <|> typedecl
 
@@ -166,6 +168,12 @@ return_ = do
     expr <- expression
     m_semi
     return (Return expr)
+
+continue :: Parser Stmt
+continue = do
+    m_reserved "continue"
+    m_semi
+    return Continue
 
 func :: Parser Stmt
 func = do

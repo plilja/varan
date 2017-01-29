@@ -79,6 +79,7 @@ statementToCode env f@(Func name vars ret body) = let deref = if isPrimitive ret
 statementToCode env (Type name members) = let typeCode = printf "struct %s {\n%s;\n};\n\n" name (indent (L.intercalate ";\n" (map (varToCode env) members)))
                                            in over code (++ typeCode) env
 statementToCode env (Return expr) = over code (++ "_result = " ++ expressionToCode env expr ++ ";\n") env
+statementToCode env Continue = over code (++ "continue;\n") env
 statementToCode env stmt = over code (++ ";\n") (simpleStatementToCode env stmt) -- Default
 
 -- | For statements that can be part of for instance a for expression
