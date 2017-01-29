@@ -26,22 +26,50 @@ func f5(param :: T) :: Int {
     return param.one + param.two;
 }
 
+func f6(param :: T) :: Void {
+    param.one := 9;
+    param.two := 9;
+}
+
+print("Exp: 4711");
 printInt(f1());
+print("Exp: 4710");
 printInt(f2());
+print("");
 
 // Function that returns a user defined type 
 t1 :: T := f3();
+print("Exp: 1");
 printInt(t1.one);
+print("Exp: 2");
 printInt(t1.two);
+print("");
 
 // With parameter
+print("Exp: 4");
 printInt(f4(2));
+print("");
 
 // With user defined type as parameter
 t2 :: T := new T;
 t2.one := 5;
 t2.two := 6;
+print("Exp: 11");
 printInt(f5(t2));
 
 // With anonymous parameter
+print("Exp: 3");
 printInt(f5(f3()));
+print("");
+
+// Function with side effect
+t3 :: T := new T;
+t2.one := 5;
+// leave two uninitialized
+f6(t3);
+print("Exp: 9");
+printInt(t3.one);
+print("Exp: 9");
+printInt(t3.two);
+print("");
+
