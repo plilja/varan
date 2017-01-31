@@ -50,12 +50,11 @@ writeCodeFile outFileName contents includes = do
 getOutFile :: String -> String
 getOutFile f = dropFolders (dropSuffix f) ++ ".h"
     where
-        dropSuffix xs = everythingBefore '.' xs
-        dropFolders xs = reverse $ everythingBefore '/' (reverse xs)
-        everythingBefore c xs = let rev = reverse xs
-                                    i = M.fromMaybe (-1) $ L.elemIndex c rev
-                                    rem = drop (i + 1) rev
-                                 in reverse rem
+        dropSuffix ('.':xs) | '.' `elem` xs = '.':dropSuffix xs
+                            | otherwise = ""
+        dropSuffix (x:xs) = x:dropSuffix xs
+        dropFolders xs | '/' `elem` xs = dropFolders (tail xs)
+                       | otherwise = xs
 
 parseCodeFromFile :: String -> IO Stmt
 parseCodeFromFile fp = do 
