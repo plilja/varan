@@ -8,6 +8,5 @@
 - Collections API:s
 - Consider user defined member functions (or stick with first method function params)
 - Separate header files from impl files
-- Ability to specify which output file compiler should write to
 - Compile files in appropriate order so compile env can propagate between files
 - Printf, string.format os something similar

@@ -2,12 +2,32 @@
 
 set -e
 
+CODE_FILES=()
+OUT="a.out"
+
+# Parse arguments
+while [[ $# > 0 ]]
+do
+    HEAD="$1"
+    shift
+    case $HEAD in
+        -o|--out)
+            OUT=$1
+            shift
+        ;;
+        *)
+            CODE_FILES+=("$HEAD")
+        ;;
+    esac
+done
+
+# Reset target folder
 if [ -d "target" ]; then
     rm -r target
 fi
-
 mkdir target
 
-./bin/compiler $@
+# Do the actual compilation
+./bin/compiler $CODE_FILES
 cp lib/*.h target
-gcc target/*.c -o a.out
+gcc target/*.c -o $OUT 

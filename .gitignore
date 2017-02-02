@@ -49,3 +49,6 @@ Contents/
 ignored
 compiler
 target
+
+a.out
+.test
