@@ -27,7 +27,10 @@ if [ -d "target" ]; then
 fi
 mkdir target
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+echo $SCRIPT_DIR
+
 # Do the actual compilation
-./bin/compiler $CODE_FILES
-cp lib/*.h target
+cp $SCRIPT_DIR/lib/*.h target
+$SCRIPT_DIR/compiler $SCRIPT_DIR/lib $CODE_FILES
 gcc target/*.c -o $OUT 

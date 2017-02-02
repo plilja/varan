@@ -16,8 +16,9 @@ import qualified Data.Maybe as M
 
 main = do
     args <- getArgs
-    mapM_ compileSingleFile args
-    compileSingleFile "lib/varan_std.vr"
+    let libFolder = head args
+    mapM_ compileSingleFile $ tail args
+    compileSingleFile $ libFolder ++ "/varan_std.vr"
 
 compileSingleFile :: String -> IO ()
 compileSingleFile fileName = do
