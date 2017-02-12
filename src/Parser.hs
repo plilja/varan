@@ -42,7 +42,10 @@ program :: Parser Stmt
 program = m_whiteSpace >> statements <* eof
 
 statements :: Parser Stmt
-statements = fmap Seq $ many statement
+statements = do
+    includes <- many include
+    body <- many statement
+    return (Seq (includes ++ body))
 
 statement :: Parser Stmt
 statement = 
@@ -54,7 +57,6 @@ statement =
     <|> try func
     <|> try continue
     <|> try return_
-    <|> try include
     <|> typedecl
 
 semsep :: Parser a -> Parser [a]
