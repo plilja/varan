@@ -12,37 +12,62 @@ import Text.Printf
 
 data Env = Env {
     _functions :: [Stmt],
+    -- TODO types
     _variables :: [VarDecl],
     _code :: String
 }
 
+--TODO
+--data Code = Code {
+--   headerFile : String, 
+--   sourceFile : String, 
+--}
+
 makeLenses ''Env
 
-programToCode :: Stmt -> (String, Maybe String)
-programToCode (Seq stmts) = programToCode_ stmts
-programToCode stmt = programToCode_ [stmt]
+modulesToCode :: [Module] -> [(Module, String)]
+modulesToCode modules = map (\m -> (m, go modules m)) modules
+    where
+        go :: [Module] -> Module -> String
+        go ms m@(Module name (Seq stmts)) = let importNames = ("varan_std":)  $ map (\(Import name) -> name) $ filter isImport stmts
+                                                imports = map (getModule ms) $ importNames
+                                                importedStatements = concat $ map (\(Module _ (Seq stmts)) -> stmts) imports
+                                                importedFunctions = filter isFunc importedStatements
+                                                --funcs = (++ importedFunctions) $ filter isFunc stmts
+                                                result = topLevelStatementToCode (over functions (++ importedFunctions) emptyEnv) $ filter (\s -> not (isImport s)) stmts
+                                                importsAsCode = concat $ map (\i -> "#include \"" ++ i ++ ".h\"\n") importNames
+                                             in importsAsCode ++ (result^.code)
+        getModule :: [Module] -> String -> Module
+        getModule ms name = head $ filter (\(Module m _) -> (m == name)) ms
 
-programToCode_ :: [Stmt] -> (String, Maybe String)
-programToCode_ stmts = let typesAndFuncs = statementToCode emptyEnv $ Seq $ filter (\x -> isType x || isFunc x) stmts
-                           main = statementToCode (set code "" typesAndFuncs) $ Seq $ filter (\x -> not (isType x) && not (isFunc x)) stmts
-                        in (typesAndFuncs^.code, mainOrEmpty (main^.code))
+topLevelStatementToCode :: Env -> [Stmt] -> Env
+topLevelStatementToCode env stmts = let _typesAndFuncs = statementToCode env $ Seq $ typesAndFuncs stmts
+                                        main = statementToCode (set code "" _typesAndFuncs) $ Seq $ filter (\x -> not (isType x) && not (isFunc x)) stmts
+                                     in if null (main^.code)
+                                        then _typesAndFuncs
+                                        else over code (++ "\n" ++ makeMain (main^.code)) _typesAndFuncs
 
-mainOrEmpty :: String -> Maybe String
-mainOrEmpty [] = Nothing 
-mainOrEmpty xs = Just $ "int main() {\n"
-                    ++ indent "void* _stack = get_stack();\n"
-                    ++ indent "init();\n" 
-                    ++ (indent xs) ++ "\n"
-                    ++ indent "stack_reset(_stack);\n"
-                    ++ indent "tear_down();\n"
-                    ++ indent "return 0;\n"
-                    ++ "}\n"
+typesAndFuncs :: [Stmt] -> [Stmt]
+typesAndFuncs stmts = filter (\x -> isType x || isFunc x) stmts
+
+makeMain :: String -> String
+makeMain xs = "int main() {\n"
+              ++ indent "void* _stack = get_stack();\n"
+              ++ indent "init();\n" 
+              ++ (indent xs) ++ "\n"
+              ++ indent "stack_reset(_stack);\n"
+              ++ indent "tear_down();\n"
+              ++ indent "return 0;\n"
+              ++ "}\n"
 
 isType (Type _ _) = True
 isType _ = False
 
 isFunc (Func _ _ _ _) = True
 isFunc _ = False
+
+isImport (Import _) = True
+isImport _ = False
  
 emptyEnv :: Env
 emptyEnv = Env stdLib [] ""
@@ -50,6 +75,7 @@ emptyEnv = Env stdLib [] ""
 
 statementToCode :: Env -> Stmt -> Env
 statementToCode env (Seq stmts) = foldl statementToCode env stmts 
+statementToCode env (Import name) = over code (++ "#include " ++ name ++ ";\n") env
 statementToCode env (If expr consequent alternative) = let consequentBranch = statementToCode (set code "" env) consequent
                                                            alternativeBranch = statementToCode (set code "" env) alternative
                                                            ifCode = printf "if(%s) {\n%s\n} else {\n%s\n}\n" 

@@ -28,9 +28,8 @@ fi
 mkdir target
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-echo $SCRIPT_DIR
 
 # Do the actual compilation
 cp $SCRIPT_DIR/lib/*.h target
-$SCRIPT_DIR/compiler $SCRIPT_DIR/lib $CODE_FILES
+$SCRIPT_DIR/compiler $SCRIPT_DIR/lib ${CODE_FILES[@]}
 gcc target/*.c -o $OUT 

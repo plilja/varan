@@ -3,6 +3,9 @@ module Grammar
 
 type Name = String
 
+data Module = Module Name Stmt
+    deriving Show
+
 data Expr = Var Name 
             | Con Literal
             | Uno Unop Expr 
@@ -29,6 +32,7 @@ data Stmt = Nop
             | StFuncCall Expr
             | Type Name [VarDecl]
             | Return Expr
+            | Import Name
             | Continue
     deriving Show
 

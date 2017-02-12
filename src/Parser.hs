@@ -20,7 +20,7 @@ languageDef = emptyDef{ commentStart = "/*"
                                  "if", "then", "else", 
                                  "while", "func", "::", 
                                  "type", "new", "return",
-                                 "continue"]
+                                 "continue", "include"]
               }
 
 TokenParser{ parens = m_parens
@@ -54,6 +54,7 @@ statement =
     <|> try func
     <|> try continue
     <|> try return_
+    <|> try include
     <|> typedecl
 
 semsep :: Parser a -> Parser [a]
@@ -168,6 +169,13 @@ return_ = do
     expr <- expression
     m_semi
     return (Return expr)
+
+include :: Parser Stmt
+include = do
+    m_reserved "include"
+    n <- m_identifier
+    m_semi
+    return (Import n)
 
 continue :: Parser Stmt
 continue = do
