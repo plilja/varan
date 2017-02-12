@@ -1,0 +1,3 @@
+include a;
+
+assert(f() == 4711);
