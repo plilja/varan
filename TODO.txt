@@ -6,5 +6,7 @@
 - Look over array implementation
 - Collections API:s
 - Consider user defined member functions (or stick with first method function params)
-- Separate header files from impl files
 - Printf, string.format os something similar
+- Make sure internal functions are prefixed by _ so that they are not callable from varan-code
+- Have all code generated in CodeGenerator.hs (none in Compiler.hs)
+- Functions in local file should be callable in any order (declaration order should not matter)

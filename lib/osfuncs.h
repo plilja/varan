@@ -14,28 +14,16 @@ struct String {
     char str[256];
 };
 
-/*void pprint(struct String *s) {
+/*void pprint(struct String *s) ;
     printf("%s\n", s->str);
 }*/
 
-void pprint(char *s) {
-    printf("%s\n", s);
-}
+void pprint(char *s);
 
-void pprintInt(int i) {
-    printf("%d\n", i);
-}
+void pprintInt(int i);
 
-struct String intToString(int a) {
-    struct String s;
-    sprintf(s.str, "%d", a);
-    return s;
-}
+struct String intToString(int a);
 
-struct String** makeString(char *s) {
-    struct String **res = (struct String**) stack_push(alloc(sizeof(struct String)));
-    strcpy((*res)->str, s);
-    return res;
-}
+struct String** makeString(char *s);
 
 #endif

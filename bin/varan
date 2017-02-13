@@ -31,5 +31,6 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Do the actual compilation
 cp $SCRIPT_DIR/lib/*.h target
+cp $SCRIPT_DIR/lib/*.c target
 $SCRIPT_DIR/compiler $SCRIPT_DIR/lib ${CODE_FILES[@]}
 gcc target/*.c -o $OUT 

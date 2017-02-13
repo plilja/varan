@@ -20,24 +20,23 @@ main = do
         codeFiles = (libFolder ++ "/varan_std.vr"):(tail args)
     modules <- mapM parseCodeFromFile codeFiles
     let compiledModules = modulesToCode modules
-    mapM_ (\(Module name _, code) -> writeCodeFile name code) compiledModules
+    mapM_ (\((Module name _), code) -> writeCodeFile name code) compiledModules
 
-writeCodeFile :: String -> String -> IO ()
-writeCodeFile moduleName contents = do
-    let outFileName = getOutFile moduleName contents
-    oFile <- openFile ("target/" ++ outFileName) WriteMode
-    hPutStrLn oFile $ "#ifndef " ++ (replace outFileName '.' '_')
-    hPutStrLn oFile $ "#define " ++ (replace outFileName '.' '_')
-    hPutStrLn oFile "#include \"osfuncs.h\""
-    hPutStrLn oFile "#include \"memory.h\""
-    if outFileName /= "varan_std.h" then
-        hPutStrLn oFile "#include \"varan_std.h\""
-    else
-        return ()
-    hPutStrLn oFile ""
-    hPutStrLn oFile contents
-    hPutStrLn oFile $ "#endif"
-    hClose oFile
+writeCodeFile :: String -> Code -> IO ()
+writeCodeFile moduleName (Code header source) = do
+    let helper = (\f content -> do
+                        oFile <- openFile ("target/" ++ f) WriteMode
+                        hPutStrLn oFile $ "#ifndef " ++ (replace f '.' '_')
+                        hPutStrLn oFile $ "#define " ++ (replace f '.' '_')
+                        hPutStrLn oFile "#include \"osfuncs.h\""
+                        hPutStrLn oFile "#include \"memory.h\""
+                        hPutStrLn oFile ""
+                        hPutStrLn oFile content
+                        hPutStrLn oFile $ "#endif"
+                        hClose oFile
+                 )
+    helper (moduleName ++ ".h") header
+    helper (moduleName ++ ".c") ("#include \"" ++ moduleName ++ ".h\"\n" ++ source)
 
 getOutFile :: String -> String -> String
 getOutFile f contents | "int main() {" `L.isInfixOf` contents = f ++ ".c" -- TODO solve with real header files instead

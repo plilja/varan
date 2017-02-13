@@ -14,38 +14,39 @@ data Env = Env {
     _functions :: [Stmt],
     -- TODO types
     _variables :: [VarDecl],
-    _code :: String
+    _code :: Code
 }
 
---TODO
---data Code = Code {
---   headerFile : String, 
---   sourceFile : String, 
---}
+data Code = Code {
+   _header :: String, 
+   _source :: String 
+}
 
 makeLenses ''Env
+makeLenses ''Code
 
-modulesToCode :: [Module] -> [(Module, String)]
+modulesToCode :: [Module] -> [(Module, Code)]
 modulesToCode modules = map (\m -> (m, go modules m)) modules
     where
-        go :: [Module] -> Module -> String
-        go ms m@(Module name (Seq stmts)) = let importNames = ("varan_std":)  $ map (\(Import name) -> name) $ filter isImport stmts
+        go :: [Module] -> Module -> Code
+        go ms m@(Module name (Seq stmts)) = let includeStd = if name == "varan_std" then [] else ["varan_std"]
+                                                importNames = (includeStd ++)  $ map (\(Import name) -> name) $ filter isImport stmts
                                                 imports = map (getModule ms) $ importNames
                                                 importedStatements = concat $ map (\(Module _ (Seq stmts)) -> stmts) imports
                                                 importedFunctions = filter isFunc importedStatements
                                                 --funcs = (++ importedFunctions) $ filter isFunc stmts
                                                 result = topLevelStatementToCode (over functions (++ importedFunctions) emptyEnv) $ filter (\s -> not (isImport s)) stmts
                                                 importsAsCode = concat $ map (\i -> "#include \"" ++ i ++ ".h\"\n") importNames
-                                             in importsAsCode ++ (result^.code)
+                                             in Code (importsAsCode ++ (result^.code.header)) (importsAsCode ++ (result^.code.source))
         getModule :: [Module] -> String -> Module
         getModule ms name = head $ filter (\(Module m _) -> (m == name)) ms
 
 topLevelStatementToCode :: Env -> [Stmt] -> Env
 topLevelStatementToCode env stmts = let _typesAndFuncs = statementToCode env $ Seq $ typesAndFuncs stmts
-                                        main = statementToCode (set code "" _typesAndFuncs) $ Seq $ filter (\x -> not (isType x) && not (isFunc x)) stmts
-                                     in if null (main^.code)
+                                        main = statementToCode (set code emptyCode _typesAndFuncs) $ Seq $ filter (\x -> not (isType x) && not (isFunc x)) stmts
+                                     in if null (main^.code.source)
                                         then _typesAndFuncs
-                                        else over code (++ "\n" ++ makeMain (main^.code)) _typesAndFuncs
+                                        else over (code . source) (++ "\n" ++ makeMain (main^.code.source)) _typesAndFuncs
 
 typesAndFuncs :: [Stmt] -> [Stmt]
 typesAndFuncs stmts = filter (\x -> isType x || isFunc x) stmts
@@ -70,51 +71,58 @@ isImport (Import _) = True
 isImport _ = False
  
 emptyEnv :: Env
-emptyEnv = Env stdLib [] ""
+emptyEnv = Env stdLib [] emptyCode 
+
+emptyCode :: Code
+emptyCode = Code "" ""
 
 
 statementToCode :: Env -> Stmt -> Env
+--statementToCode a b = undefined TODO
 statementToCode env (Seq stmts) = foldl statementToCode env stmts 
-statementToCode env (Import name) = over code (++ "#include " ++ name ++ ";\n") env
-statementToCode env (If expr consequent alternative) = let consequentBranch = statementToCode (set code "" env) consequent
-                                                           alternativeBranch = statementToCode (set code "" env) alternative
+statementToCode env (Import name) = let a = over (code . header) (++ "#include " ++ name ++ ";\n") env
+                                     in over (code . source) (++ "#include " ++ name ++ ";\n") a
+statementToCode env (If expr consequent alternative) = let consequentBranch = statementToCode (set code emptyCode env) consequent
+                                                           alternativeBranch = statementToCode (set code emptyCode env) alternative
                                                            ifCode = printf "if(%s) {\n%s\n} else {\n%s\n}\n" 
                                                                         (expressionToCode env expr)
-                                                                        (indent (consequentBranch^.code))
-                                                                        (indent (alternativeBranch^.code))
-                                                        in over code (++ ifCode) env
-statementToCode env (For initial cond increment body) = let initializationEnv = statementToCode (set code "" env) initial
-                                                            incrementEnv = simpleStatementToCode (set code "" initializationEnv) increment
-                                                            bodyEnv = statementToCode (set code "" incrementEnv) body
+                                                                        (indent (consequentBranch^.code.source))
+                                                                        (indent (alternativeBranch^.code.source))
+                                                        in over (code . source) (++ ifCode) env
+statementToCode env (For initial cond increment body) = let initializationEnv = statementToCode (set code emptyCode env) initial
+                                                            incrementEnv = simpleStatementToCode (set code emptyCode initializationEnv) increment
+                                                            bodyEnv = statementToCode (set code emptyCode incrementEnv) body
                                                             forCode = printf "%s\nfor (; %s; %s) {\n%s\n}\n" 
-                                                                            (initializationEnv^.code) 
+                                                                            (initializationEnv^.code.source) 
                                                                             (expressionToCode initializationEnv cond) 
-                                                                            (incrementEnv^.code) 
-                                                                            (indent (bodyEnv^.code))
-                                                         in over code (++ forCode) env
+                                                                            (incrementEnv^.code.source) 
+                                                                            (indent (bodyEnv^.code.source))
+                                                         in over (code . source) (++ forCode) env
 statementToCode env f@(Func name vars ret body) = let deref = if isPrimitive ret then "" else "*"
                                                       returnStatement = (if (ret /= "Void") then "return " ++ deref ++ "_result;\n" else "")
-                                                      funcCode = printf ("%s %s(%s) {\n"
+                                                      funcSignature = printf "%s %s(%s)" (returnTypeToCode ret) name (varsToCode env vars)
+                                                      funcCode = printf ("%s {\n"
                                                                 ++ indent ("void* _stack = get_stack();\n"
                                                                     ++ (if (ret /= "Void") then (typeToCode ret) ++ " _result;\n" else "")
                                                                     ++ "%s\n"
                                                                     ++ "stack_reset(_stack);\n"
                                                                     ++ returnStatement)
-                                                                ++ "}\n\n") (returnTypeToCode ret) name (varsToCode env vars) ((statementToCode (set code "" env) body)^.code)
-                                                  in over functions (++ [f]) $ over code (++ funcCode) env
+                                                                ++ "}\n\n") funcSignature ((statementToCode (set code emptyCode env) body)^.code.source)
+                                                      headerCode = funcSignature ++ ";\n"
+                                                  in over functions (++ [f]) $ over (code . header) (++ headerCode) $ over (code . source) (++ funcCode) env
 statementToCode env (Type name members) = let typeCode = printf "struct %s {\n%s;\n};\n\n" name (indent (L.intercalate ";\n" (map (varToCode env) members)))
-                                           in over code (++ typeCode) env
-statementToCode env (Return expr) = over code (++ "_result = " ++ expressionToCode env expr ++ ";\n") env
-statementToCode env Continue = over code (++ "continue;\n") env
-statementToCode env stmt = over code (++ ";\n") (simpleStatementToCode env stmt) -- Default
+                                           in over (code . header) (++ typeCode) env
+statementToCode env (Return expr) = over (code . source) (++ "_result = " ++ expressionToCode env expr ++ ";\n") env
+statementToCode env Continue = over (code . source) (++ "continue;\n") env
+statementToCode env stmt = over (code . source) (++ ";\n") (simpleStatementToCode env stmt) -- Default
 
 -- | For statements that can be part of for instance a for expression
 -- TODO consider cleaner solution, maybe make part of grammar
 simpleStatementToCode :: Env -> Stmt -> Env
 simpleStatementToCode env Nop = env
-simpleStatementToCode env (variable := expr) = over code (++ (expressionToCode env variable) ++ " = (" ++ expressionToCode env expr ++ ")") env
-simpleStatementToCode env (StFuncCall funcCall) = over code (++ expressionToCode env funcCall) env
-simpleStatementToCode env (StVd var) = over code (++ varToCode env var) env 
+simpleStatementToCode env (variable := expr) = over (code . source) (++ (expressionToCode env variable) ++ " = (" ++ expressionToCode env expr ++ ")") env
+simpleStatementToCode env (StFuncCall funcCall) = over (code . source) (++ expressionToCode env funcCall) env
+simpleStatementToCode env (StVd var) = over (code . source) (++ varToCode env var) env 
 
 
 expressionToCode :: Env -> Expr -> String
