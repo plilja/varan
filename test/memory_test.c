@@ -19,35 +19,35 @@ struct A {
 };
 
 void register_types() {
-    struct Type int_type;
+    struct _Type int_type;
     int_type.num_fields = 0;
     int_type.size = sizeof(struct IntType);
-    add_type(int_type);
+    _add_type(int_type);
 
-    struct Type double_type;
+    struct _Type double_type;
     double_type.num_fields = 0;
     double_type.size = sizeof(struct DoubleType);
-    add_type(double_type);
+    _add_type(double_type);
 
-    struct Type a_type;
+    struct _Type a_type;
     a_type.num_fields = 2;
     a_type.size = sizeof(struct A);
-    add_type(a_type);
+    _add_type(a_type);
 }
 
 int main() {
-    init();
+    _init();
     register_types();
-    void* s = get_stack();
+    void* s = _get_stack();
 
     // Allocate some data and store stack pointers to that data
-    struct IntType **i = (struct IntType**) stack_push(alloc(sizeof(struct IntType)));
+    struct IntType **i = (struct IntType**) _stack_push(_alloc(sizeof(struct IntType)));
     (*i)->type = 0;
-    struct A **a = (struct A**) stack_push(alloc(sizeof(struct A)));
+    struct A **a = (struct A**) _stack_push(_alloc(sizeof(struct A)));
     (*a)->type = 2;
-    (*a)->i = *((struct IntType**)stack_push(alloc(sizeof(struct IntType))));
+    (*a)->i = *((struct IntType**)_stack_push(_alloc(sizeof(struct IntType))));
     (*a)->i->type = 0;
-    (*a)->d = *((struct DoubleType**)stack_push(alloc(sizeof(struct DoubleType))));
+    (*a)->d = *((struct DoubleType**)_stack_push(_alloc(sizeof(struct DoubleType))));
     (*a)->d->type = 1;
 
     // Set values
@@ -60,7 +60,7 @@ int main() {
     struct IntType *iBefore = *i;
     for (int j = 0; j < 10000000; ++j) {
         // Allocate data without putting it on the stack
-        alloc(sizeof(struct IntType));
+        _alloc(sizeof(struct IntType));
 
         // Verify values are preserved
         assert((*i)->v == 4);
@@ -74,6 +74,6 @@ int main() {
 
     puts("Success");
 
-    stack_reset(s);
-    tear_down();
+    _stack_reset(s);
+    _tear_down();
 }

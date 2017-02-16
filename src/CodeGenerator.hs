@@ -53,11 +53,11 @@ typesAndFuncs stmts = filter (\x -> isType x || isFunc x) stmts
 
 makeMain :: String -> String
 makeMain xs = "int main() {\n"
-              ++ indent "void* _stack = get_stack();\n"
-              ++ indent "init();\n" 
+              ++ indent "void* _stack = _get_stack();\n"
+              ++ indent "_init();\n" 
               ++ (indent xs) ++ "\n"
-              ++ indent "stack_reset(_stack);\n"
-              ++ indent "tear_down();\n"
+              ++ indent "_stack_reset(_stack);\n"
+              ++ indent "_tear_down();\n"
               ++ indent "return 0;\n"
               ++ "}\n"
 
@@ -102,10 +102,10 @@ statementToCode env f@(Func name vars ret body) = let deref = if isPrimitive ret
                                                       returnStatement = (if (ret /= "Void") then "return " ++ deref ++ "_result;\n" else "")
                                                       funcSignature = printf "%s %s(%s)" (returnTypeToCode ret) name (varsToCode env vars)
                                                       funcCode = printf ("%s {\n"
-                                                                ++ indent ("void* _stack = get_stack();\n"
+                                                                ++ indent ("void* _stack = _get_stack();\n"
                                                                     ++ (if (ret /= "Void") then (typeToCode ret) ++ " _result;\n" else "")
                                                                     ++ "%s\n"
-                                                                    ++ "stack_reset(_stack);\n"
+                                                                    ++ "_stack_reset(_stack);\n"
                                                                     ++ returnStatement)
                                                                 ++ "}\n\n") funcSignature ((statementToCode (set code emptyCode env) body)^.code.source)
                                                       headerCode = funcSignature ++ ";\n"
@@ -139,10 +139,10 @@ expressionToCode env (Duo duop expr1 expr2) = "(" ++
                                          ")"
 -- TODO need to take address of result if result is not primitive
 expressionToCode env (FuncCall name params) = let t = returnTypeOfFunction env name
-                                                  prefix = if isPrimitive t then "" else "stack_push("
+                                                  prefix = if isPrimitive t then "" else "_stack_push("
                                                   suffix = if isPrimitive t then "" else ")"
                                                in printf "%s%s(%s)%s" prefix name (L.intercalate "," (map (expressionToCode env) params)) suffix
-expressionToCode env (New t) = "(" ++ typeToCode t ++ ")" ++ "stack_push(alloc(sizeof(struct " ++ t ++ ")))"
+expressionToCode env (New t) = "(" ++ typeToCode t ++ ")" ++ "_stack_push(_alloc(sizeof(struct " ++ t ++ ")))"
 
 returnTypeOfFunction :: Env -> String -> String
 returnTypeOfFunction env funcName = extractFuncReturnType $ head $ filter (\f -> funcName == (extractFuncName f)) (env^.functions)
@@ -154,7 +154,7 @@ literalToCode :: Literal -> String
 literalToCode (BoolLiteral b) = map C.toLower $ show b 
 literalToCode (IntLiteral i) = show i
 literalToCode (DoubleLiteral d) = show d
-literalToCode (StringLiteral s) = "makeString(" ++ show s ++ ")" -- TODO memory leak
+literalToCode (StringLiteral s) = "_makeString(" ++ show s ++ ")" -- TODO memory leak
 
 varsToCode env vs = L.intercalate ", " $ map (varToCode env) vs
 

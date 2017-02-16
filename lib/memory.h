@@ -5,18 +5,18 @@
 #include "stdio.h"
 #include "string.h"
 
-struct Type {
+struct _Type {
     int size;
     int num_fields;
 };
 
-void add_type(struct Type t);
-void init();
-void tear_down();
+void _add_type(struct _Type t);
+void _init();
+void _tear_down();
 
-void* alloc(size_t size);
-void* stack_push(void *p);
-void stack_reset(void *p);
-void* get_stack();
+void* _alloc(size_t size);
+void* _stack_push(void *p);
+void _stack_reset(void *p);
+void* _get_stack();
 
 #endif

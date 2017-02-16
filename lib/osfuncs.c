@@ -5,29 +5,22 @@
 #include "assert.h"
 #include "osfuncs.h"
 
-#define true 1
-#define false 0
-
-/*void pprint(struct String *s) {
-    printf("%s\n", s->str);
-}*/
-
-void pprint(char *s) {
-    printf("%s\n", s);
+void print(struct String **s) {
+    printf("%s\n", (*s)->str);
 }
 
-void pprintInt(int i) {
+void printInt(int i) {
     printf("%d\n", i);
 }
 
-struct String intToString(int a) {
+struct String _intToString(int a) {
     struct String s;
     sprintf(s.str, "%d", a);
     return s;
 }
 
-struct String** makeString(char *s) {
-    struct String **res = (struct String**) stack_push(alloc(sizeof(struct String)));
+struct String** _makeString(char *s) {
+    struct String **res = (struct String**) _stack_push(_alloc(sizeof(struct String)));
     strcpy((*res)->str, s);
     return res;
 }

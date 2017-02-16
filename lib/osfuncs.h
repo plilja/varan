@@ -14,16 +14,12 @@ struct String {
     char str[256];
 };
 
-/*void pprint(struct String *s) ;
-    printf("%s\n", s->str);
-}*/
+void print(struct String **s);
 
-void pprint(char *s);
+void printInt(int i);
 
-void pprintInt(int i);
+struct String _intToString(int a);
 
-struct String intToString(int a);
-
-struct String** makeString(char *s);
+struct String** _makeString(char *s);
 
 #endif
