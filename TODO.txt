@@ -11,4 +11,3 @@
 - Functions in local file should be callable in any order (declaration order should not matter)
 - Tests for garbage collection
 - Register user defined types with garbage collector
-- Don't copy already copied objects in garbage collector (for instance objects with multiple references)

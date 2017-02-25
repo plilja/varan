@@ -39,10 +39,14 @@ void _tear_down() {
 }
 
 int _copy(void *dest, void *src) {
-    // TODO if src is already in target space, then don't copy
-    struct _Type *type = &types[*((int*) src)];
-    memcpy(dest, src, type->size);
-    return type->size;
+    if (passive <= src && src < passive + LIMIT) { 
+        // Passive is becoming the new active, don't copy if src isn't already present in passive space
+        return 0;
+    } else {
+        struct _Type *type = &types[*((int*) src)];
+        memcpy(dest, src, type->size);
+        return type->size;
+    }
 }
 
 /**
